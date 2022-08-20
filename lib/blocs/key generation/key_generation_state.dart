@@ -10,8 +10,22 @@ class KeyGenerationInitial extends KeyGenerationState {
 }
 
 class KeyGenerationDone extends KeyGenerationState {
+  GeneratedKey keys;
+  KeyGenerationDone(this.keys);
+
   @override
-  // TODO: implement props
-  List<Object?> get props => throw UnimplementedError();
-  
+  List<Object?> get props => [keys];
+}
+
+class KeyGenerationFailure extends KeyGenerationState {
+  String message;
+  KeyGenerationFailure(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class KeyGenerationLoading extends KeyGenerationState{
+  @override
+  List<Object?> get props => []; 
 }
