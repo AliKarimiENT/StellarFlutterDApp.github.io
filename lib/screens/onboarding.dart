@@ -1,56 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:stellar_flutter_dapp/blocs/key%20generation/key_generation_cubit.dart';
+import 'package:stellar_flutter_dapp/screens/setup_wallet.dart';
 
-class Onboarding extends StatelessWidget {
+import '../app_theme.dart';
+import '../widgets/custom_appbar.dart';
+
+class Onboarding extends StatefulWidget {
   const Onboarding({Key? key}) : super(key: key);
+
+  @override
+  State<Onboarding> createState() => _OnboardingState();
+}
+
+class _OnboardingState extends State<Onboarding> {
+  late KeyGenerationCubit _keyGenerationCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _keyGenerationCubit = KeyGenerationCubit();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          'Stellar Wallet',
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.white,
-        shadowColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Welcome to Stellar DApp',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
+      appBar: CustomAppBar(),
+      body: BlocProvider(
+        create: (context) => _keyGenerationCubit,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    height: MediaQuery.of(context).size.height / 2,
+                    margin: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                    child: SvgPicture.asset(
+                      'assets/welcome.svg',
+                    ),
+                  ),
+                  Text(
+                    'Welcome to Stellar DApp',
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
-            child: SizedBox(
-              width: double.maxFinite,
-              child: RawMaterialButton(
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(8))),
-                fillColor: Colors.blue.shade700,
-                onPressed: () {},
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text('Get started',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500)),
+            Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
+              child: SizedBox(
+                width: double.maxFinite,
+                child: RawMaterialButton(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8))),
+                  fillColor: AppTheme.primaryColor,
+                  onPressed: () {
+                    _keyGenerationCubit.generateKeys();
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Get started',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500),
+                        ),
+                        BlocConsumer<KeyGenerationCubit, KeyGenerationState>(
+                            bloc: _keyGenerationCubit,
+                            listener: (context, state) {
+                              if (state is KeyGenerationDone) {
+                                print('Key generated . . . ');
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => const SetupWalletPage(),
+                                ));
+                              }
+                            },
+                            builder: (context, state) {
+                              if (state is KeyGenerationLoading) {
+                                return const CircularProgressIndicator();
+                              }
+                              return Container();
+                            })
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
