@@ -44,7 +44,7 @@ class _OnboardingState extends State<Onboarding> {
                       'assets/welcome.svg',
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Welcome to Stellar DApp',
                     style: TextStyle(
                         color: Colors.black,
@@ -81,9 +81,12 @@ class _OnboardingState extends State<Onboarding> {
                             bloc: _keyGenerationCubit,
                             listener: (context, state) {
                               if (state is KeyGenerationDone) {
+                                var mnemonicKeys = state.keys.mnemonic;
+                                var accountId = state.keys.publicKey;
                                 print('Key generated . . . ');
                                 Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => const SetupWalletPage(),
+                                  builder: (context) =>
+                                      SetupWalletPage(mnemonicKeys,accountId),
                                 ));
                               }
                             },

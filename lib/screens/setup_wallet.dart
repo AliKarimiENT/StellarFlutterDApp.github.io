@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
+import 'package:stellar_flutter_dapp/screens/secret_recovery.dart';
 
 import '../widgets/custom_appbar.dart';
 
 class SetupWalletPage extends StatelessWidget {
-  const SetupWalletPage({Key? key}) : super(key: key);
-
+  SetupWalletPage(this.mnemonicKeys, this.accountId, {Key? key})
+      : super(key: key);
+  List<String> mnemonicKeys;
+  String accountId;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +84,12 @@ class SetupWalletPage extends StatelessWidget {
                   child: SizedBox(
                     width: double.maxFinite,
                     child: RawMaterialButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) =>
+                              SecretRecoveryPage(mnemonicKeys, accountId),
+                        ));
+                      },
                       // hoverColor: Colors.blue,
                       elevation: 0,
                       fillColor: AppTheme.primaryColor,
