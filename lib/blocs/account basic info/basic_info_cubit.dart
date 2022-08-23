@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
@@ -12,6 +13,8 @@ class BasicInfoCubit extends Cubit<BasicInfoState> {
     try {
       emit(FundAccountLoading());
       bool funded = await FriendBot.fundTestAccount(accountId);
+      final pref = await SharedPreferences.getInstance();
+      await pref.setBool('funded', funded);
       print('fund account request result : $funded');
       emit(FundAccountDone(funded));
     } catch (e) {

@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/account%20basic%20info/basic_info_cubit.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
+import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../widgets/custom_appbar.dart';
@@ -20,11 +22,25 @@ class WalletPage extends StatefulWidget {
 
 class _WalletPageState extends State<WalletPage> {
   late BasicInfoCubit _infoCubit;
+  late bool funded = false;
+  late String activeAccountId;
+  List<Account> accounts = [];
   @override
   void initState() {
     super.initState();
     _infoCubit = BasicInfoCubit();
-    _infoCubit.fundAccount(widget.accountId);
+    loadAccountInfo();
+    activeAccountId = widget.accountId;
+  }
+
+  Future<void> loadAccountInfo() async {
+    final pref = await SharedPreferences.getInstance();
+    funded = pref.getBool('funded')!;
+    if (funded == false) {
+      _infoCubit.fundAccount(widget.accountId);
+    } else {
+      _infoCubit.getBasicAccountInfo(pref.getString('accountId')!);
+    }
   }
 
   @override
@@ -54,7 +70,7 @@ class _WalletPageState extends State<WalletPage> {
         backgroundColor: Colors.white,
         shadowColor: Colors.white,
         elevation: 0,
-        leading: Icon(
+        leading: const Icon(
           Icons.menu_rounded,
           color: Colors.black,
         ),
@@ -72,6 +88,7 @@ class _WalletPageState extends State<WalletPage> {
             if (state is FundAccountDone) {
               if (state.result) {
                 _infoCubit.getBasicAccountInfo(widget.accountId);
+                this.funded = true;
               }
             }
           },
@@ -135,6 +152,23 @@ class _WalletPageState extends State<WalletPage> {
                 );
               }
             } else if (state is AccountInfoLoaded) {
+              var account = Account(
+                imageUrl: imageUrl,
+                accountId: state.account.accountId,
+                index: accounts.length+1
+              );
+              bool exist = false;
+              for (var account in accounts) {
+                if (account.accountId == state.account.accountId) {
+                  exist = true;
+                  break;
+                }
+              }
+
+              if (!exist) {
+                accounts.add(account);
+              }
+              var id = state.account.accountId;
               var xlmAmount;
               for (stl.Balance? balance in state.account.balances!) {
                 switch (balance!.assetType) {
@@ -147,130 +181,32 @@ class _WalletPageState extends State<WalletPage> {
                         "Balance: ${balance.balance} ${balance.assetCode} Issuer: ${balance.assetIssuer}");
                 }
               }
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          margin: EdgeInsets.symmetric(horizontal: 4),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.green,
-                          ),
-                        ),
-                        Text(
-                          'Stellar Test Network',
-                          style: TextStyle(
-                              color: Colors.grey.shade600, fontSize: 12),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.grey.shade600,
-                        )
+              return CustomScrollView(
+                slivers: [
+                  SliverList(
+                    delegate:
+                        sliverAccountInfoHeader(xlmAmount, account, context),
+                  ),
+                  SliverPersistentHeader(
+                    delegate: SectionHeaderDelegate("Section B"),
+                    pinned: true,
+                    floating: true,
+                  ),
+                  SliverList(
+                    delegate: SliverChildListDelegate(
+                      [
+                        // Container(
+                        //   height: 500,
+                        //   color: Colors.purple,
+                        // ),
+                        // Container(
+                        //   height: 500,
+                        //   color: Colors.red,
+                        // ),
                       ],
                     ),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      margin: EdgeInsets.only(top: 24, bottom: 0),
-                      padding: EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppTheme.primaryColor,
-                      ),
-                      child: CircleAvatar(
-                        foregroundColor: Colors.white,
-                        radius: 24,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(50),
-                          child: Image.network(
-                            'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600',
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Account 1',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'XLM $xlmAmount ',
-                        style: TextStyle(
-                            fontSize: 16, color: Colors.grey.shade600),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(25))),
-                          child: RichText(
-                            text: TextSpan(
-                              children: <TextSpan>[
-                                TextSpan(
-                                  text: widget.accountId.substring(0, 5),
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '...',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: widget.accountId.substring(
-                                      widget.accountId.length - 5,
-                                      widget.accountId.length),
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 12,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            Clipboard.setData(
-                                ClipboardData(text: widget.accountId));
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content:
-                                  Text('Account id copied to your clipboard'),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.all(16),
-                              backgroundColor: AppTheme.primaryColor,duration: const Duration(milliseconds: 500),
-                            ));
-                          },
-                          splashRadius: 24,
-                          icon: const Icon(
-                            Icons.copy_rounded,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
+                  )
+                ],
               );
             } else if (state is AccountInfoFailure) {
               return Center(
@@ -316,4 +252,334 @@ class _WalletPageState extends State<WalletPage> {
       ),
     );
   }
+
+  String accountId2 =
+      'GCWTQYKL4Z6H262JW7BP76V2TZIGFE6FU5HDMOCZJ6327ZL3B6RVUABO';
+  String imageUrl = 'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600';
+  SliverChildListDelegate sliverAccountInfoHeader(
+      xlmAmount, Account account, BuildContext context) {
+    return SliverChildListDelegate(
+      [
+        GestureDetector(
+          onTap: () {
+            showModalBottomSheet(
+              backgroundColor: Colors.transparent,
+              context: context,
+              builder: (context) {
+                var account1length = widget.accountId.length;
+                return Wrap(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          topRight: Radius.circular(15),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            onTap: () {
+                              setState(() {
+                                _infoCubit
+                                    .getBasicAccountInfo(widget.accountId);
+                                activeAccountId = widget.accountId;
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            title: Text(
+                              'Account 1: ${widget.accountId.toString().substring(0, 8)}...${widget.accountId.toString().substring(account1length - 8, account1length)}',
+                            ),
+                            leading: Container(
+                              width: 50,
+                              height: 50,
+                              margin: EdgeInsets.symmetric(vertical: 8),
+                              padding: EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: activeAccountId == widget.accountId
+                                    ? AppTheme.primaryColor
+                                    : Colors.grey.shade400,
+                              ),
+                              child: CircleAvatar(
+                                foregroundColor: Colors.white,
+                                radius: 24,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(50),
+                                  child: Image.network(
+                                    imageUrl,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          ListTile(
+                            onTap: () {
+                              setState(() {
+                                _infoCubit.getBasicAccountInfo(accountId2);
+                                activeAccountId = accountId2;
+                                Navigator.of(context).pop();
+                              });
+                            },
+                            title: Text(
+                              'Account 2: ${accountId2.toString().substring(0, 8)}...${accountId2.toString().substring(accountId2.length - 8, accountId2.length)}',
+                            ),
+                            leading: Container(
+                              width: 50,
+                              height: 50,
+                              margin: EdgeInsets.symmetric(vertical: 8),
+                              padding: EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: activeAccountId == accountId2
+                                    ? AppTheme.primaryColor
+                                    : Colors.grey.shade400,
+                              ),
+                              child: CircleAvatar(
+                                foregroundColor: Colors.white,
+                                radius: 24,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(50),
+                                  child: Image.network(
+                                    imageUrl,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    )
+                  ],
+                );
+              },
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                margin: EdgeInsets.symmetric(horizontal: 4),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.green,
+                ),
+              ),
+              Text(
+                'Stellar Test Network',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Colors.grey.shade600,
+              )
+            ],
+          ),
+        ),
+        Container(
+          width: 50,
+          height: 50,
+          margin: EdgeInsets.only(top: 24, bottom: 0),
+          padding: EdgeInsets.all(2),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.primaryColor,
+          ),
+          child: CircleAvatar(
+            foregroundColor: Colors.white,
+            radius: 24,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: Image.network(
+                account.imageUrl,
+              ),
+            ),
+          ),
+        ),
+        Text(
+          'Account ${account.index}',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'XLM $xlmAmount ',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.all(Radius.circular(25))),
+              child: RichText(
+                text: TextSpan(
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: account.accountId.substring(0, 5),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '...',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    TextSpan(
+                      text: account.accountId.substring(
+                          widget.accountId.length - 5, widget.accountId.length),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: account.accountId));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Account id copied to your clipboard'),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  behavior: SnackBarBehavior.floating,
+                  margin: EdgeInsets.all(16),
+                  backgroundColor: AppTheme.primaryColor,
+                  duration: const Duration(milliseconds: 500),
+                ));
+              },
+              splashRadius: 24,
+              icon: const Icon(
+                Icons.copy_rounded,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String title;
+  final double height;
+
+  SectionHeaderDelegate(this.title, [this.height = 65]);
+
+  @override
+  Widget build(context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: Colors.white,
+      alignment: Alignment.center,
+      padding: EdgeInsets.symmetric(horizontal: 48, vertical: 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryColor,
+                ),
+                child: Icon(
+                  Icons.credit_card_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Buy',
+                style: TextStyle(color: AppTheme.primaryColor),
+              )
+            ],
+          ),
+          Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryColor,
+                ),
+                child: Icon(
+                  Icons.download,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Receive',
+                style: TextStyle(color: AppTheme.primaryColor),
+              )
+            ],
+          ),
+          Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryColor,
+                ),
+                child: Icon(
+                  Icons.send,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Send',
+                style: TextStyle(color: AppTheme.primaryColor),
+              )
+            ],
+          ),
+          Column(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryColor,
+                ),
+                child: Icon(
+                  Icons.swap_horiz,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                'Swap',
+                style: TextStyle(color: AppTheme.primaryColor),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
 }

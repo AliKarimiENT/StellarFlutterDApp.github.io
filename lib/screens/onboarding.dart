@@ -86,13 +86,18 @@ class _OnboardingState extends State<Onboarding> {
                                 print('Key generated . . . ');
                                 Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) =>
-                                      SetupWalletPage(mnemonicKeys,accountId),
+                                      SetupWalletPage(mnemonicKeys, accountId),
                                 ));
                               }
                             },
                             builder: (context, state) {
                               if (state is KeyGenerationLoading) {
-                                return const CircularProgressIndicator();
+                                return Container(
+                                  margin: EdgeInsets.symmetric(horizontal: 8),
+                                  child: const CircularProgressIndicator(),
+                                  width: 16,
+                                  height: 16,
+                                );
                               }
                               return Container();
                             })

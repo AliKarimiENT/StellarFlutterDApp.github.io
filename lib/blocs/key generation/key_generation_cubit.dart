@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/models/generated_key.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
@@ -17,6 +18,9 @@ class KeyGenerationCubit extends Cubit<KeyGenerationState> {
       print("${keyPair.accountId}");
       print('Secret Seed');
       print("${keyPair.secretSeed}");
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('accountId', keyPair.accountId);
+      await prefs.setBool('funded', false);
 
       // generate mnemonic workds
       String mnemonic = await Wallet.generate12WordsMnemonic();
