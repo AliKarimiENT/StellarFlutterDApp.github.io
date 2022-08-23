@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -7,11 +8,14 @@ import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/account%20basic%20info/basic_info_cubit.dart';
+import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit_cubit.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
-import '../widgets/custom_appbar.dart';
+late String activeAccountId;
+late List<Account> accounts = [];
+late BasicInfoCubit _infoCubit;
 
 class WalletPage extends StatefulWidget {
   const WalletPage(this.accountId, {Key? key}) : super(key: key);
@@ -21,13 +25,12 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage> {
-  late BasicInfoCubit _infoCubit;
   late bool funded = false;
-  late String activeAccountId;
-  List<Account> accounts = [];
+
   @override
   void initState() {
     super.initState();
+
     _infoCubit = BasicInfoCubit();
     loadAccountInfo();
     activeAccountId = widget.accountId;
@@ -152,21 +155,26 @@ class _WalletPageState extends State<WalletPage> {
                 );
               }
             } else if (state is AccountInfoLoaded) {
-              var account = Account(
-                imageUrl: imageUrl,
-                accountId: state.account.accountId,
-                index: accounts.length+1
-              );
+              var newAccount = Account(
+                  imageUrl: imageUrl,
+                  accountId: state.account.accountId,
+                  index: accounts.length + 1);
               bool exist = false;
               for (var account in accounts) {
                 if (account.accountId == state.account.accountId) {
                   exist = true;
+                  newAccount = account;
                   break;
                 }
               }
 
               if (!exist) {
-                accounts.add(account);
+                accounts.add(newAccount);
+                accounts.add(Account(
+                  imageUrl: imageUrl,
+                  accountId: accountId2,
+                  index: accounts.length + 1,
+                ));
               }
               var id = state.account.accountId;
               var xlmAmount;
@@ -185,7 +193,7 @@ class _WalletPageState extends State<WalletPage> {
                 slivers: [
                   SliverList(
                     delegate:
-                        sliverAccountInfoHeader(xlmAmount, account, context),
+                        sliverAccountInfoHeader(xlmAmount, newAccount, context),
                   ),
                   SliverPersistentHeader(
                     delegate: SectionHeaderDelegate("Section B"),
@@ -255,7 +263,8 @@ class _WalletPageState extends State<WalletPage> {
 
   String accountId2 =
       'GCWTQYKL4Z6H262JW7BP76V2TZIGFE6FU5HDMOCZJ6327ZL3B6RVUABO';
-  String imageUrl = 'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600';
+  String imageUrl =
+      'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600';
   SliverChildListDelegate sliverAccountInfoHeader(
       xlmAmount, Account account, BuildContext context) {
     return SliverChildListDelegate(
@@ -483,93 +492,285 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double height;
 
   SectionHeaderDelegate(this.title, [this.height = 65]);
+  final TransactionCubit _transactionCubit = TransactionCubit();
+  double amount = 0;
 
   @override
   Widget build(context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: 48, vertical: 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.primaryColor,
+    return BlocProvider(
+      create: (context) => _transactionCubit,
+      child: Container(
+        color: Colors.white,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primaryColor,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.credit_card_rounded),
+                    onPressed: () {},
+                    color: Colors.white,
+                  ),
                 ),
-                child: Icon(
-                  Icons.credit_card_rounded,
-                  color: Colors.white,
+                const Text(
+                  'Buy',
+                  style: TextStyle(color: AppTheme.primaryColor),
+                )
+              ],
+            ),
+            Column(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primaryColor,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.download),
+                    onPressed: () {},
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              Text(
-                'Buy',
-                style: TextStyle(color: AppTheme.primaryColor),
-              )
-            ],
-          ),
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.primaryColor,
+                const Text(
+                  'Receive',
+                  style: TextStyle(color: AppTheme.primaryColor),
+                )
+              ],
+            ),
+            Column(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primaryColor,
+                  ),
+                  child: IconButton(
+                    // iconSize: 16,
+                    icon: Icon(Icons.send),
+                    onPressed: () {
+                      late Account sender, receiver;
+                      for (Account account in accounts) {
+                        if (account.accountId == activeAccountId) {
+                          sender = account;
+                        } else {
+                          receiver = account;
+                        }
+                      }
+                      showModalBottomSheet(
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (context) {
+                          return Padding(
+                            padding: MediaQuery.of(context).viewInsets,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(15),
+                                      topRight: Radius.circular(15),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 16),
+                                        child: Text(
+                                            'Enter amount of XLM want to send'),
+                                      ),
+                                      Container(
+                                        height: 48,
+                                        margin: const EdgeInsets.symmetric(
+                                            vertical: 16, horizontal: 24),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              color: AppTheme.primaryColor,
+                                              width: 2),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: TextFormField(
+                                          autocorrect: false,
+                                          decoration: const InputDecoration(
+                                            fillColor: Colors.white,
+                                            focusColor: Colors.white,
+                                          ),
+                                          onChanged: (value) {
+                                            amount = double.parse(value);
+                                          },
+                                          keyboardType: const TextInputType
+                                              .numberWithOptions(decimal: true),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 24,
+                                            right: 24,
+                                            top: 8,
+                                            bottom: 16),
+                                        child: SizedBox(
+                                          width: double.maxFinite,
+                                          child: RawMaterialButton(
+                                            onPressed: () {
+                                              _transactionCubit
+                                                  .sendNativePayment(
+                                                      senderId:
+                                                          sender.accountId,
+                                                      destinationId:
+                                                          receiver.accountId,
+                                                      amount:
+                                                          amount.toString());
+                                            },
+                                            // hoverColor: Colors.blue,
+                                            elevation: 0,
+                                            fillColor: AppTheme.primaryColor,
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(8)),
+                                            ),
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 12),
+                                              child: BlocBuilder<
+                                                  TransactionCubit,
+                                                  TransactionCubitState>(
+                                                bloc: _transactionCubit,
+                                                builder: (contextModal, state) {
+                                                  if (state
+                                                      is TransactionPaymentSending) {
+                                                    return Row(
+                                                      children: [
+                                                        const Text(
+                                                          'Transaction Sending',
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                              fontSize: 16,
+                                                              color:
+                                                                  Colors.white),
+                                                        ),
+                                                        Container(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                      .symmetric(
+                                                                  horizontal:
+                                                                      8),
+                                                          child:
+                                                              const CircularProgressIndicator(),
+                                                          width: 16,
+                                                          height: 16,
+                                                        )
+                                                      ],
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                    );
+                                                  } else if (state
+                                                      is TransactionPaymentSent) {
+                                                    Navigator.of(contextModal)
+                                                        .pop();
+                                                    _infoCubit
+                                                        .getBasicAccountInfo(
+                                                            sender.accountId);
+                                                  } else if (state
+                                                      is TransactionPaymentFailure) {
+                                                    return const Text(
+                                                        'An Error Accord',
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            fontSize: 16,
+                                                            color:
+                                                                Colors.white));
+                                                  }
+
+                                                  return const Text('Submit',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          fontSize: 16,
+                                                          color: Colors.white));
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      BlocBuilder(
+                                        builder: (context, state) {
+                                          if (state
+                                              is TransactionPaymentFailure) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(8),
+                                              child: Text(
+                                                  'Error : ${state.message}',
+                                                  style: const TextStyle(
+                                                    color: Colors.red,
+                                                    fontSize: 12,
+                                                  ),
+                                                  textAlign: TextAlign.center),
+                                            );
+                                          }
+                                          return Container();
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    color: Colors.white,
+                  ),
                 ),
-                child: Icon(
-                  Icons.download,
-                  color: Colors.white,
+                Text(
+                  'Send',
+                  style: TextStyle(color: AppTheme.primaryColor),
+                )
+              ],
+            ),
+            Column(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primaryColor,
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.swap_horiz),
+                    onPressed: () {},
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              Text(
-                'Receive',
-                style: TextStyle(color: AppTheme.primaryColor),
-              )
-            ],
-          ),
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.primaryColor,
-                ),
-                child: Icon(
-                  Icons.send,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'Send',
-                style: TextStyle(color: AppTheme.primaryColor),
-              )
-            ],
-          ),
-          Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.primaryColor,
-                ),
-                child: Icon(
-                  Icons.swap_horiz,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                'Swap',
-                style: TextStyle(color: AppTheme.primaryColor),
-              )
-            ],
-          ),
-        ],
+                Text(
+                  'Swap',
+                  style: TextStyle(color: AppTheme.primaryColor),
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
