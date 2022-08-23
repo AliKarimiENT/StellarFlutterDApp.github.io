@@ -714,24 +714,24 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                                           ),
                                         ),
                                       ),
-                                      BlocBuilder(
-                                        builder: (context, state) {
-                                          if (state
-                                              is TransactionPaymentFailure) {
-                                            return Padding(
-                                              padding: const EdgeInsets.all(8),
-                                              child: Text(
-                                                  'Error : ${state.message}',
-                                                  style: const TextStyle(
-                                                    color: Colors.red,
-                                                    fontSize: 12,
-                                                  ),
-                                                  textAlign: TextAlign.center),
-                                            );
-                                          }
-                                          return Container();
-                                        },
-                                      )
+                                      // BlocBuilder(
+                                      //   builder: (context, state) {
+                                      //     if (state
+                                      //         is TransactionPaymentFailure) {
+                                      //       return Padding(
+                                      //         padding: EdgeInsets.all(8),
+                                      //         child: Text(
+                                      //             'Error : ${state.message}',
+                                      //             style: TextStyle(
+                                      //               color: Colors.red,
+                                      //               fontSize: 12,
+                                      //             ),
+                                      //             textAlign: TextAlign.center),
+                                      //       );
+                                      //     }
+                                      //     return Container();
+                                      //   },
+                                      // )
                                     ],
                                   ),
                                 )
