@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
-part 'transaction_cubit_state.dart';
+part 'transaction_state.dart';
 
 class TransactionCubit extends Cubit<TransactionCubitState> {
   TransactionCubit() : super(TransactionCubitInitial());
@@ -36,6 +36,10 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       // Sign the transaction with the sender's key pair.
       transaction.sign(senderKeyPair, stl.Network.TESTNET);
 
+      var transactions = sdk.transactions.forAccount(senderId).execute();
+      var operations = sdk.operations.forAccount(senderId).execute();
+      stl.Page<stl.OperationResponse> payments =
+          await sdk.payments.forAccount(senderId).execute();
       // Submit the transaction to the stellar network.
       stl.SubmitTransactionResponse response =
           await sdk.submitTransaction(transaction);
@@ -46,6 +50,5 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     } catch (e) {
       TransactionPaymentFailure(e.toString());
     }
-
   }
 }

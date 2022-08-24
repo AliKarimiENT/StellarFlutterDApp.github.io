@@ -27,6 +27,7 @@ class _OnboardingState extends State<Onboarding> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       appBar: CustomAppBar(),
       body: BlocProvider(
         create: (context) => _keyGenerationCubit,

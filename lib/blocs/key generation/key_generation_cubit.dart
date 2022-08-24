@@ -23,18 +23,32 @@ class KeyGenerationCubit extends Cubit<KeyGenerationState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('accountId', keyPair.accountId);
       await prefs.setBool('funded', false);
+
+      // Generate another key pair for account2
+      KeyPair keyPair2 = KeyPair.random();
+
       Map<String, String> keys = {
         keyPair.accountId: keyPair.secretSeed,
-        'GCWTQYKL4Z6H262JW7BP76V2TZIGFE6FU5HDMOCZJ6327ZL3B6RVUABO':
-            'SAIJCZ4C7UK27ORZVZ4SQHJNLMKPHG3CWBLAWTML45ZKTHWFKB2SUAJA'
+        keyPair2.accountId: keyPair2.secretSeed
       };
+
       String encodedKeys = json.encode(keys);
-      print(encodedKeys);
+        print(encodedKeys);
 
       prefs.setString('keys', encodedKeys);
+
+      Map<String, dynamic> funds = {
+        keyPair.accountId: false,
+        keyPair2.accountId: false
+      };
+      String encodedFunds = json.encode(funds);
+      prefs.setString('funds', encodedFunds);
+
+
       // generate mnemonic workds
       String mnemonic = await Wallet.generate12WordsMnemonic();
       print(mnemonic);
+
       emit(KeyGenerationDone(GeneratedKey(
           pubkey: keyPair.accountId,
           secretSeed: keyPair.secretSeed,

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,8 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/account%20basic%20info/basic_info_cubit.dart';
-import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit_cubit.dart';
-import 'package:stellar_flutter_dapp/consts.dart';
+import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
 import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
@@ -25,20 +23,40 @@ class WalletPage extends StatefulWidget {
 }
 
 class _WalletPageState extends State<WalletPage> {
-  late bool funded = false;
+  late Map<String, dynamic> keys;
+  late Map<String, dynamic>
+      funds; // a mapping for accountId and true/false which shows that an account is funded or not
+  late String accountId2;
 
   @override
   void initState() {
     super.initState();
+    loadFunds();
 
     _infoCubit = BasicInfoCubit();
     loadAccountInfo();
+    loadKeys();
     activeAccountId = widget.accountId;
+  }
+
+  Future<void> loadFunds() async {
+    final pref = await SharedPreferences.getInstance();
+    String encodedFunds = pref.getString('funds')!;
+    funds = json.decode(encodedFunds);
+    //      var secretSeed = keys[senderId];
+  }
+
+  Future<void> loadKeys() async {
+    final pref = await SharedPreferences.getInstance();
+    String encodedKeys = pref.getString('keys')!;
+    keys = json.decode(encodedKeys);
+    accountId2 = keys.keys.toList()[1];
   }
 
   Future<void> loadAccountInfo() async {
     final pref = await SharedPreferences.getInstance();
-    funded = pref.getBool('funded')!;
+
+    var funded = funds[activeAccountId];
     if (funded == false) {
       _infoCubit.fundAccount(widget.accountId);
     } else {
@@ -49,6 +67,7 @@ class _WalletPageState extends State<WalletPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
@@ -90,8 +109,8 @@ class _WalletPageState extends State<WalletPage> {
           listener: (context, state) {
             if (state is FundAccountDone) {
               if (state.result) {
-                _infoCubit.getBasicAccountInfo(widget.accountId);
-                this.funded = true;
+                _infoCubit.getBasicAccountInfo(activeAccountId);
+                funds[activeAccountId] = true;
               }
             }
           },
@@ -170,11 +189,6 @@ class _WalletPageState extends State<WalletPage> {
 
               if (!exist) {
                 accounts.add(newAccount);
-                accounts.add(Account(
-                  imageUrl: imageUrl,
-                  accountId: accountId2,
-                  index: accounts.length + 1,
-                ));
               }
               var id = state.account.accountId;
               var xlmAmount;
@@ -261,8 +275,6 @@ class _WalletPageState extends State<WalletPage> {
     );
   }
 
-  String accountId2 =
-      'GCWTQYKL4Z6H262JW7BP76V2TZIGFE6FU5HDMOCZJ6327ZL3B6RVUABO';
   String imageUrl =
       'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600';
   SliverChildListDelegate sliverAccountInfoHeader(
@@ -291,10 +303,10 @@ class _WalletPageState extends State<WalletPage> {
                         children: [
                           ListTile(
                             onTap: () {
+                              activeAccountId = widget.accountId;
                               setState(() {
                                 _infoCubit
-                                    .getBasicAccountInfo(widget.accountId);
-                                activeAccountId = widget.accountId;
+                                    .getBasicAccountInfo(activeAccountId);
                               });
                               Navigator.of(context).pop();
                             },
@@ -327,10 +339,14 @@ class _WalletPageState extends State<WalletPage> {
                           ListTile(
                             onTap: () {
                               setState(() {
-                                _infoCubit.getBasicAccountInfo(accountId2);
                                 activeAccountId = accountId2;
-                                Navigator.of(context).pop();
+                                if (funds[accountId2]) {
+                                  _infoCubit.getBasicAccountInfo(accountId2);
+                                } else {
+                                  _infoCubit.fundAccount(accountId2);
+                                }
                               });
+                              Navigator.of(context).pop();
                             },
                             title: Text(
                               'Account 2: ${accountId2.toString().substring(0, 8)}...${accountId2.toString().substring(accountId2.length - 8, accountId2.length)}',
@@ -338,8 +354,8 @@ class _WalletPageState extends State<WalletPage> {
                             leading: Container(
                               width: 50,
                               height: 50,
-                              margin: EdgeInsets.symmetric(vertical: 8),
-                              padding: EdgeInsets.all(2),
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: activeAccountId == accountId2
@@ -413,7 +429,7 @@ class _WalletPageState extends State<WalletPage> {
         Text(
           'Account ${account.index}',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16),
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -563,188 +579,12 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                           receiver = account;
                         }
                       }
-                      showModalBottomSheet(
-                        backgroundColor: Colors.transparent,
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (context) {
-                          return Padding(
-                            padding: MediaQuery.of(context).viewInsets,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(15),
-                                      topRight: Radius.circular(15),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(top: 16),
-                                        child: Text(
-                                            'Enter amount of XLM want to send'),
-                                      ),
-                                      Container(
-                                        height: 48,
-                                        margin: const EdgeInsets.symmetric(
-                                            vertical: 16, horizontal: 24),
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              color: AppTheme.primaryColor,
-                                              width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        child: TextFormField(
-                                          autocorrect: false,
-                                          decoration: const InputDecoration(
-                                            fillColor: Colors.white,
-                                            focusColor: Colors.white,
-                                          ),
-                                          onChanged: (value) {
-                                            amount = double.parse(value);
-                                          },
-                                          keyboardType: const TextInputType
-                                              .numberWithOptions(decimal: true),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 24,
-                                            right: 24,
-                                            top: 8,
-                                            bottom: 16),
-                                        child: SizedBox(
-                                          width: double.maxFinite,
-                                          child: RawMaterialButton(
-                                            onPressed: () {
-                                              _transactionCubit
-                                                  .sendNativePayment(
-                                                      senderId:
-                                                          sender.accountId,
-                                                      destinationId:
-                                                          receiver.accountId,
-                                                      amount:
-                                                          amount.toString());
-                                            },
-                                            // hoverColor: Colors.blue,
-                                            elevation: 0,
-                                            fillColor: AppTheme.primaryColor,
-                                            shape: const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.all(
-                                                  Radius.circular(8)),
-                                            ),
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 12),
-                                              child: BlocBuilder<
-                                                  TransactionCubit,
-                                                  TransactionCubitState>(
-                                                bloc: _transactionCubit,
-                                                builder: (contextModal, state) {
-                                                  if (state
-                                                      is TransactionPaymentSending) {
-                                                    return Row(
-                                                      children: [
-                                                        const Text(
-                                                          'Transaction Sending',
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w700,
-                                                              fontSize: 16,
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                        Container(
-                                                          margin:
-                                                              const EdgeInsets
-                                                                      .symmetric(
-                                                                  horizontal:
-                                                                      8),
-                                                          child:
-                                                              const CircularProgressIndicator(),
-                                                          width: 16,
-                                                          height: 16,
-                                                        )
-                                                      ],
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                    );
-                                                  } else if (state
-                                                      is TransactionPaymentSent) {
-                                                    Navigator.of(contextModal)
-                                                        .pop();
-                                                    _infoCubit
-                                                        .getBasicAccountInfo(
-                                                            sender.accountId);
-                                                  } else if (state
-                                                      is TransactionPaymentFailure) {
-                                                    return const Text(
-                                                        'An Error Accord',
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                            fontSize: 16,
-                                                            color:
-                                                                Colors.white));
-                                                  }
-
-                                                  return const Text('Submit',
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          fontSize: 16,
-                                                          color: Colors.white));
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      // BlocBuilder(
-                                      //   builder: (context, state) {
-                                      //     if (state
-                                      //         is TransactionPaymentFailure) {
-                                      //       return Padding(
-                                      //         padding: EdgeInsets.all(8),
-                                      //         child: Text(
-                                      //             'Error : ${state.message}',
-                                      //             style: TextStyle(
-                                      //               color: Colors.red,
-                                      //               fontSize: 12,
-                                      //             ),
-                                      //             textAlign: TextAlign.center),
-                                      //       );
-                                      //     }
-                                      //     return Container();
-                                      //   },
-                                      // )
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                          );
-                        },
-                      );
+                      sendAmountModalBottomSheet(context, sender, receiver);
                     },
                     color: Colors.white,
                   ),
                 ),
-                Text(
+                const Text(
                   'Send',
                   style: TextStyle(color: AppTheme.primaryColor),
                 )
@@ -772,6 +612,130 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
           ],
         ),
       ),
+    );
+  }
+
+  Future<dynamic> sendAmountModalBottomSheet(
+      BuildContext context, Account sender, Account receiver) {
+    return showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return Wrap(children: [
+          Container(
+            padding: MediaQuery.of(context).viewInsets,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
+            ),
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text('Enter amount of XLM want to send'),
+                ),
+                Container(
+                  height: 48,
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppTheme.primaryColor, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextFormField(
+                    autocorrect: false,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      fillColor: Colors.white,
+                      focusColor: Colors.white,
+                    ),
+                    onChanged: (value) {
+                      amount = double.parse(value);
+                    },
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 24, right: 24, top: 8, bottom: 16),
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    child: RawMaterialButton(
+                      onPressed: () {
+                        _transactionCubit.sendNativePayment(
+                            senderId: sender.accountId,
+                            destinationId: receiver.accountId,
+                            amount: amount.toString());
+                      },
+                      // hoverColor: Colors.blue,
+                      elevation: 0,
+                      fillColor: AppTheme.primaryColor,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: BlocConsumer<TransactionCubit,
+                            TransactionCubitState>(
+                          bloc: _transactionCubit,
+                          listener: (context, state) {
+                            if (state is TransactionPaymentSent) {
+                              Navigator.of(context).pop();
+                              _infoCubit.getBasicAccountInfo(sender.accountId);
+                            }
+                          },
+                          builder: (context, state) {
+                            if (state is TransactionPaymentSending) {
+                              return Row(
+                                children: [
+                                  const Text(
+                                    'Transaction Sending',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                        color: Colors.white),
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    child: const CircularProgressIndicator(),
+                                    width: 16,
+                                    height: 16,
+                                  )
+                                ],
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                              );
+                            } else if (state is TransactionPaymentFailure) {
+                              return const Text('An Error Accord',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                      color: Colors.white));
+                            }
+
+                            return const Text('Submit',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    color: Colors.white));
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ]);
+      },
     );
   }
 
