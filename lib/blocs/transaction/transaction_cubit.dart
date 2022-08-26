@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import "dart:math";
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,17 +36,26 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       // Sign the transaction with the sender's key pair.
       transaction.sign(senderKeyPair, stl.Network.TESTNET);
 
-      var transactions = sdk.transactions.forAccount(senderId).execute();
-      var operations = sdk.operations.forAccount(senderId).execute();
-      stl.Page<stl.OperationResponse> payments =
-          await sdk.payments.forAccount(senderId).execute();
       // Submit the transaction to the stellar network.
       stl.SubmitTransactionResponse response =
           await sdk.submitTransaction(transaction);
       if (response.success) {
         print("Payment sent");
-        emit(TransactionPaymentSent());
+        emit(
+          TransactionPaymentSent(
+            transaction,
+            DateTime.now(),
+            transaction.fee!.toDouble() * pow(10, -7).toDouble(),
+            destinationId,
+            amount,
+          ),
+        );
       }
+
+      var transactions = sdk.transactions.forAccount(senderId).execute();
+      var operations = sdk.operations.forAccount(senderId).execute();
+      stl.Page<stl.OperationResponse> payments =
+          await sdk.payments.forAccount(senderId).execute();
     } catch (e) {
       TransactionPaymentFailure(e.toString());
     }

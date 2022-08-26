@@ -305,8 +305,7 @@ class _WalletPageState extends State<WalletPage> {
                             onTap: () {
                               activeAccountId = widget.accountId;
                               setState(() {
-                                _infoCubit
-                                    .getBasicAccountInfo(activeAccountId);
+                                _infoCubit.getBasicAccountInfo(activeAccountId);
                               });
                               Navigator.of(context).pop();
                             },
@@ -571,7 +570,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     // iconSize: 16,
                     icon: Icon(Icons.send),
                     onPressed: () {
-                      late Account sender, receiver;
+                      Account? sender, receiver;
                       for (Account account in accounts) {
                         if (account.accountId == activeAccountId) {
                           sender = account;
@@ -579,7 +578,20 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                           receiver = account;
                         }
                       }
-                      sendAmountModalBottomSheet(context, sender, receiver);
+                      if (receiver == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              'The reciever account is not funded\nTry to change account and it will be funded'),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          behavior: SnackBarBehavior.floating,
+                          margin: EdgeInsets.all(16),
+                          backgroundColor: AppTheme.primaryColor,
+                          duration: const Duration(milliseconds: 1250),
+                        ));
+                      } else {
+                        sendAmountModalBottomSheet(context, sender!, receiver);
+                      }
                     },
                     color: Colors.white,
                   ),
@@ -624,6 +636,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
       builder: (context) {
         return Wrap(children: [
           Container(
+            width: MediaQuery.of(context).size.width,
             padding: MediaQuery.of(context).viewInsets,
             decoration: const BoxDecoration(
               color: Colors.white,
@@ -632,110 +645,211 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                 topRight: Radius.circular(15),
               ),
             ),
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: Text('Enter amount of XLM want to send'),
-                ),
-                Container(
-                  height: 48,
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppTheme.primaryColor, width: 2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TextFormField(
-                    autocorrect: false,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      fillColor: Colors.white,
-                      focusColor: Colors.white,
-                    ),
-                    onChanged: (value) {
-                      amount = double.parse(value);
-                    },
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      left: 24, right: 24, top: 8, bottom: 16),
-                  child: SizedBox(
-                    width: double.maxFinite,
-                    child: RawMaterialButton(
-                      onPressed: () {
-                        _transactionCubit.sendNativePayment(
-                            senderId: sender.accountId,
-                            destinationId: receiver.accountId,
-                            amount: amount.toString());
-                      },
-                      // hoverColor: Colors.blue,
-                      elevation: 0,
-                      fillColor: AppTheme.primaryColor,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
+            child: BlocBuilder<TransactionCubit, TransactionCubitState>(
+              bloc: _transactionCubit,
+              builder: (context, state) {
+                if (state is TransactionPaymentSent) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16, bottom: 16),
+                        child: Text(
+                          'Confirm send info',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: BlocConsumer<TransactionCubit,
-                            TransactionCubitState>(
-                          bloc: _transactionCubit,
-                          listener: (context, state) {
-                            if (state is TransactionPaymentSent) {
-                              Navigator.of(context).pop();
-                              _infoCubit.getBasicAccountInfo(sender.accountId);
-                            }
-                          },
-                          builder: (context, state) {
-                            if (state is TransactionPaymentSending) {
-                              return Row(
-                                children: [
-                                  const Text(
-                                    'Transaction Sending',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        color: Colors.white),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 8),
-                                    child: const CircularProgressIndicator(),
-                                    width: 16,
-                                    height: 16,
-                                  )
-                                ],
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                              );
-                            } else if (state is TransactionPaymentFailure) {
-                              return const Text('An Error Accord',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                      color: Colors.white));
-                            }
-
-                            return const Text('Submit',
+                      confirmationRowItem(
+                          title: 'Sender:',
+                          value: state.transaction.sourceAccount!.accountId
+                              .toString()),
+                      confirmationRowItem(
+                          title: 'Recipient:', value: state.receiver),
+                      confirmationRowItem(
+                        title: 'Amount:',
+                        value: '${state.amount} XLM',
+                      ),
+                      confirmationRowItem(
+                        title: 'Transaction Fee:',
+                        value: '${state.fee} XLM',
+                      ),
+                      confirmationRowItem(
+                        title: 'Time:',
+                        value:
+                            '${getMonth(state.time.month)} ${state.time.day},${state.time.year} at ${state.time.hour}:${state.time.minute}:${state.time.second}',
+                      ),
+                      Padding(
+                          padding: const EdgeInsets.only(
+                              left: 24, right: 24, top: 8, bottom: 16),
+                          child: SizedBox(
+                            width: double.maxFinite,
+                            child: RawMaterialButton(
+                              elevation: 0,
+                              fillColor: AppTheme.primaryColor,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8)),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text(
+                                'Proceed',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
-                                    color: Colors.white));
+                                    color: Colors.white),
+                              ),
+                            ),
+                          )),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Text('Enter amount of XLM want to send'),
+                    ),
+                    Container(
+                      height: 48,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 24),
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        border:
+                            Border.all(color: AppTheme.primaryColor, width: 2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextFormField(
+                        autocorrect: false,
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          fillColor: Colors.white,
+                          focusColor: Colors.white,
+                        ),
+                        onChanged: (value) {
+                          amount = double.parse(value);
+                        },
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 24, right: 24, top: 8, bottom: 16),
+                      child: SizedBox(
+                        width: double.maxFinite,
+                        child: RawMaterialButton(
+                          onPressed: () {
+                            _transactionCubit.sendNativePayment(
+                                senderId: sender.accountId,
+                                destinationId: receiver.accountId,
+                                amount: amount.toString());
                           },
+                          // hoverColor: Colors.blue,
+                          elevation: 0,
+                          fillColor: AppTheme.primaryColor,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: BlocConsumer<TransactionCubit,
+                                TransactionCubitState>(
+                              bloc: _transactionCubit,
+                              listener: (context, state) {
+                                if (state is TransactionPaymentSent) {
+                                  // Navigator.of(context).pop();
+                                  FocusScope.of(context).unfocus();
+                                  _infoCubit
+                                      .getBasicAccountInfo(sender.accountId);
+                                }
+                              },
+                              builder: (context, state) {
+                                if (state is TransactionPaymentSending) {
+                                  return Row(
+                                    children: [
+                                      const Text(
+                                        'Transaction Sending',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                            color: Colors.white),
+                                      ),
+                                      Container(
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 8),
+                                        child:
+                                            const CircularProgressIndicator(),
+                                        width: 16,
+                                        height: 16,
+                                      )
+                                    ],
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  );
+                                } else if (state is TransactionPaymentFailure) {
+                                  return const Text('An Error Accord',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          color: Colors.red));
+                                } else if (state is TransactionPaymentSent) {}
+
+                                return const Text('Submit',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                        color: Colors.white));
+                              },
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         ]);
       },
+    );
+  }
+
+  Widget confirmationRowItem({required String title, required String value}) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(title),
+              const SizedBox(width: 36),
+              Expanded(
+                  child: Text(
+                value,
+                maxLines: 3,
+                textAlign: TextAlign.right,
+              ))
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Divider(),
+        )
+      ],
     );
   }
 
@@ -747,4 +861,58 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
+
+  String getMonth(int month) {
+    String value = '';
+    switch (month) {
+      case 1:
+        value = 'Jan';
+        break;
+      case 2:
+        value = 'Feb';
+
+        break;
+      case 3:
+        value = 'Mar';
+
+        break;
+      case 4:
+        value = 'Apr';
+
+        break;
+      case 5:
+        value = 'May';
+
+        break;
+      case 6:
+        value = 'Jun';
+
+        break;
+      case 7:
+        value = 'Jul';
+
+        break;
+      case 8:
+        value = 'Aug';
+
+        break;
+      case 9:
+        value = 'Sep';
+
+        break;
+      case 10:
+        value = 'Oct';
+
+        break;
+      case 11:
+        value = 'Nov';
+
+        break;
+      case 12:
+        value = 'Dec';
+
+        break;
+    }
+    return value;
+  }
 }

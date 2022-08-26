@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -11,50 +12,61 @@ part 'key_generation_state.dart';
 
 class KeyGenerationCubit extends Cubit<KeyGenerationState> {
   KeyGenerationCubit() : super(KeyGenerationInitial());
-
+  late KeyPair keyPair1;
+  late KeyPair keyPair2;
   Future<void> generateKeys() async {
+    final prefs = await SharedPreferences.getInstance();
+
     try {
       emit(KeyGenerationLoading());
-      KeyPair keyPair = KeyPair.random();
-      print('Account ID');
-      print("${keyPair.accountId}");
-      print('Secret Seed');
-      print("${keyPair.secretSeed}");
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('accountId', keyPair.accountId);
-      await prefs.setBool('funded', false);
-
+      keyPair1 = KeyPair.random();
       // Generate another key pair for account2
-      KeyPair keyPair2 = KeyPair.random();
+      keyPair2 = KeyPair.random();
+      String? encodedKeys = prefs.getString('keys');
+      Map<String, dynamic> keys = {};
+      if (encodedKeys == null) {
+        await prefs.setString('accountId', keyPair1.accountId);
+        await prefs.setBool('funded', false);
 
-      Map<String, String> keys = {
-        keyPair.accountId: keyPair.secretSeed,
-        keyPair2.accountId: keyPair2.secretSeed
-      };
+        keys = {
+          keyPair1.accountId: keyPair1.secretSeed,
+          keyPair2.accountId: keyPair2.secretSeed
+        };
 
-      String encodedKeys = json.encode(keys);
+        String encodedKeys = json.encode(keys);
         print(encodedKeys);
 
-      prefs.setString('keys', encodedKeys);
+        prefs.setString('keys', encodedKeys);
 
-      Map<String, dynamic> funds = {
-        keyPair.accountId: false,
-        keyPair2.accountId: false
-      };
-      String encodedFunds = json.encode(funds);
-      prefs.setString('funds', encodedFunds);
+        Map<String, dynamic> funds = {
+          keyPair1.accountId: false,
+          keyPair2.accountId: false
+        };
+        String encodedFunds = json.encode(funds);
+        prefs.setString('funds', encodedFunds);
 
+        // generate mnemonic words
 
-      // generate mnemonic workds
+      } else {
+        keys = json.decode(encodedKeys);
+        print(keys.toString());
+      }
+
       String mnemonic = await Wallet.generate12WordsMnemonic();
       print(mnemonic);
 
-      emit(KeyGenerationDone(GeneratedKey(
-          pubkey: keyPair.accountId,
-          secretSeed: keyPair.secretSeed,
-          mnemonicWords: mnemonic.split(' '))));
+      emit(
+        KeyGenerationDone(
+          GeneratedKey(
+            pubkey: keys.keys.toList()[0],
+            secretSeed: keys.values.toList()[0],
+            mnemonicWords: mnemonic.split(' '),
+          ),
+        ),
+      );
     } catch (e) {
       emit(KeyGenerationFailure(e.toString()));
+      print(e.toString());
     }
   }
 }
