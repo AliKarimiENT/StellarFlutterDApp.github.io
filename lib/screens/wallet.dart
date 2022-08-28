@@ -27,7 +27,7 @@ class _WalletPageState extends State<WalletPage> {
   late Map<String, dynamic>
       funds; // a mapping for accountId and true/false which shows that an account is funded or not
   late String accountId2;
-
+  late Map<String, dynamic> images;
   @override
   void initState() {
     super.initState();
@@ -51,6 +51,13 @@ class _WalletPageState extends State<WalletPage> {
     String encodedKeys = pref.getString('keys')!;
     keys = json.decode(encodedKeys);
     accountId2 = keys.keys.toList()[1];
+
+    images = {
+      keys.keys.toList()[0]:
+          'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600',
+      keys.keys.toList()[1]:
+          'https://www.artnews.com/wp-content/uploads/2022/01/unnamed-2.png?w=631'
+    };
   }
 
   Future<void> loadAccountInfo() async {
@@ -175,7 +182,7 @@ class _WalletPageState extends State<WalletPage> {
               }
             } else if (state is AccountInfoLoaded) {
               var newAccount = Account(
-                  imageUrl: imageUrl,
+                  imageUrl: images[activeAccountId],
                   accountId: state.account.accountId,
                   index: accounts.length + 1);
               bool exist = false;
@@ -275,8 +282,6 @@ class _WalletPageState extends State<WalletPage> {
     );
   }
 
-  String imageUrl =
-      'https://img.seadn.io/files/7a485f43de73d372b34ef909e8e60aa7.png?fit=max&w=600';
   SliverChildListDelegate sliverAccountInfoHeader(
       xlmAmount, Account account, BuildContext context) {
     return SliverChildListDelegate(
@@ -329,7 +334,7 @@ class _WalletPageState extends State<WalletPage> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(50),
                                   child: Image.network(
-                                    imageUrl,
+                                    images.values.toList()[0],
                                   ),
                                 ),
                               ),
@@ -367,7 +372,7 @@ class _WalletPageState extends State<WalletPage> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(50),
                                   child: Image.network(
-                                    imageUrl,
+                                    images.values.toList()[1],
                                   ),
                                 ),
                               ),

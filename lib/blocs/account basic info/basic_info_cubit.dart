@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -48,6 +49,40 @@ class BasicInfoCubit extends Cubit<BasicInfoState> {
       emit(AccountInfoLoaded(account));
     } catch (e) {
       emit(AccountInfoFailure(e.toString()));
+    }
+  }
+
+  Future<void> setUserProfileImage(
+      String imageUri, String accountId, String secretSeed) async {
+    try {
+      // load key pair
+      KeyPair keyPair = KeyPair.fromSecretSeed(secretSeed);
+
+      // Load account data with its accountId
+      AccountResponse account = await sdk.accounts.account(accountId);
+
+      String key = 'image';
+
+      // Our value is imageUri
+      // Convert the value to bytes
+      List<int> list = imageUri.codeUnits;
+      Uint8List valueBytes = Uint8List.fromList(list);
+
+      // Prepare the manage data operation
+      ManageDataOperationBuilder manageDataOperationBuilder =
+          ManageDataOperationBuilder(key, valueBytes);
+
+      // Create the transaction
+      Transaction transaction = TransactionBuilder(account)
+          .addOperation(manageDataOperationBuilder.build())
+          .build();
+
+      // Sign the transaction
+      transaction.sign(keyPair, Network.TESTNET);
+
+      await sdk.submitTransaction(transaction);
+    } catch (e) {
+      print(e.toString());
     }
   }
 }
