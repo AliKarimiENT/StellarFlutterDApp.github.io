@@ -20,15 +20,23 @@ class TransactionPaymentSent extends TransactionCubitState {
   double fee; // based on XLM
   String receiver;
   String amount;
+  String? type;
   TransactionPaymentSent(
-    this.transaction,
-    this.time,
-    this.fee,
-    this.receiver,
-    this.amount,
+    {required this.transaction,
+    required this.time,
+    required this.fee,
+    required this.receiver,
+    required this.amount,
+    this.type}
   );
   @override
-  List<Object?> get props => [transaction, time, fee, receiver,amount];
+  List<Object?> get props => [
+        transaction,
+        time,
+        fee,
+        receiver,
+        amount,
+      ];
 }
 
 class TransactionPaymentFailure extends TransactionCubitState {
@@ -41,4 +49,21 @@ class TransactionPaymentFailure extends TransactionCubitState {
 class TransactionPaymentConfirmed extends TransactionCubitState {
   @override
   List<Object?> get props => [];
+}
+
+class TrustingToken extends TransactionCubitState {
+  @override
+  List<Object?> get props => [];
+}
+
+class TrustingTokenDone extends TransactionCubitState {
+  @override
+  List<Object?> get props => [];
+}
+
+class TrustingTokenFailure extends TransactionCubitState {
+  String message;
+  TrustingTokenFailure(this.message);
+  @override
+  List<Object?> get props => [message];
 }

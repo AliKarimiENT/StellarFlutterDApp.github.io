@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,12 +9,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/account%20basic%20info/basic_info_cubit.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
+import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
+
+import '../models/token.dart';
 
 late String activeAccountId;
 late List<Account> accounts = [];
 late BasicInfoCubit _infoCubit;
+late TransactionCubit _transactionCubit;
+
+late TabController controller;
 
 class WalletPage extends StatefulWidget {
   const WalletPage(this.accountId, {Key? key}) : super(key: key);
@@ -22,21 +29,41 @@ class WalletPage extends StatefulWidget {
   State<WalletPage> createState() => _WalletPageState();
 }
 
-class _WalletPageState extends State<WalletPage> {
+class _WalletPageState extends State<WalletPage>
+    with SingleTickerProviderStateMixin {
   late Map<String, dynamic> keys;
   late Map<String, dynamic>
       funds; // a mapping for accountId and true/false which shows that an account is funded or not
   late String accountId2;
   late Map<String, dynamic> images;
+  late List<Token> tokens;
+
   @override
   void initState() {
     super.initState();
+    controller = TabController(length: 2, vsync: this);
+
     loadFunds();
 
     _infoCubit = BasicInfoCubit();
+    _transactionCubit = TransactionCubit();
     loadAccountInfo();
     loadKeys();
     activeAccountId = widget.accountId;
+
+    tokens = [
+      Token(
+        symbol: 'DIGI',
+        image:
+            'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/dgb.svg',
+        name: 'DIGI token',
+        issuerName: 'Ali Karimi',
+        issuerAccountId: issuerSecretSeed,
+        value: 1.5,
+        balance: 0,
+        trusted: false,
+      )
+    ];
   }
 
   Future<void> loadFunds() async {
@@ -129,7 +156,7 @@ class _WalletPageState extends State<WalletPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      margin: EdgeInsets.all(8),
+                      margin: const EdgeInsets.all(8),
                       width: 24,
                       height: 24,
                       child: const CircularProgressIndicator(
@@ -175,7 +202,7 @@ class _WalletPageState extends State<WalletPage> {
                       IconButton(
                           onPressed: () =>
                               _infoCubit.fundAccount(widget.accountId),
-                          icon: Icon(Icons.replay))
+                          icon: const Icon(Icons.replay))
                     ],
                   ),
                 );
@@ -221,18 +248,370 @@ class _WalletPageState extends State<WalletPage> {
                     pinned: true,
                     floating: true,
                   ),
-                  SliverList(
-                    delegate: SliverChildListDelegate(
-                      [
-                        // Container(
-                        //   height: 500,
-                        //   color: Colors.purple,
-                        // ),
-                        // Container(
-                        //   height: 500,
-                        //   color: Colors.red,
-                        // ),
+                  SliverPersistentHeader(
+                    delegate: AssetsHeaderDelegate(50),
+                  ),
+                  SliverFillRemaining(
+                    child: TabBarView(
+                      children: [
+                        ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            var token = tokens[index];
+                            return Column(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 16),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          SvgPicture.network(token.image,
+                                              color: Colors.grey, height: 36),
+                                          Expanded(
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            bottom: 4),
+                                                    child: Text(
+                                                      token.symbol,
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                  0.80)),
+                                                    ),
+                                                  ),
+                                                  token.balance != 0
+                                                      ? Text(
+                                                          '6',
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .normal,
+                                                              fontSize: 12,
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                      0.80)),
+                                                        )
+                                                      : Container(),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            top: 4),
+                                                    child: Text(
+                                                      "${token.value} XLM",
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.normal,
+                                                          fontSize: 12,
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                  0.80)),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          token.trusted == false
+                                              ? Container(
+                                                  width: 40,
+                                                  alignment: Alignment.center,
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 0),
+                                                  child: IconButton(
+                                                    color:
+                                                        AppTheme.primaryColor,
+                                                    onPressed: () {
+                                                      showTrustBottomSheet(
+                                                          context, token);
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.add,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
+                                                    splashRadius: 32,
+                                                  ),
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color:
+                                                        AppTheme.primaryColor,
+                                                  ),
+                                                )
+                                              : Container(
+                                                  width: 40,
+                                                  alignment: Alignment.center,
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 0),
+                                                  child: IconButton(
+                                                    color:
+                                                        AppTheme.primaryColor,
+                                                    onPressed: () {
+                                                      showDialog(
+                                                        context: context,
+                                                        barrierColor:
+                                                            Colors.black38,
+                                                        barrierDismissible:
+                                                            true,
+                                                        builder: (context) {
+                                                          return BackdropFilter(
+                                                            filter: ImageFilter
+                                                                .blur(
+                                                                    sigmaX: 5,
+                                                                    sigmaY: 5),
+                                                            child: Dialog(
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              16),
+                                                                      side:
+                                                                          const BorderSide(
+                                                                        color: AppTheme
+                                                                            .primaryColor,
+                                                                        width:
+                                                                            1,
+                                                                      )),
+                                                              elevation: 0,
+                                                              child: Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                            .only(
+                                                                        left:
+                                                                            24,
+                                                                        top: 16,
+                                                                        right:
+                                                                            24,
+                                                                        bottom:
+                                                                            8),
+                                                                child: Wrap(
+                                                                  children: [
+                                                                    Text(
+                                                                      token
+                                                                          .symbol,
+                                                                      style: const TextStyle(
+                                                                          fontSize:
+                                                                              20,
+                                                                          fontWeight: FontWeight
+                                                                              .w500,
+                                                                          color:
+                                                                              AppTheme.primaryColor),
+                                                                    ),
+                                                                    const Padding(
+                                                                      padding: EdgeInsets.symmetric(
+                                                                          vertical:
+                                                                              8),
+                                                                      child:
+                                                                          Divider(
+                                                                        thickness:
+                                                                            1,
+                                                                        color: AppTheme
+                                                                            .primaryColor,
+                                                                      ),
+                                                                    ),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                      children: [
+                                                                        dialogMenuItem(
+                                                                            title:
+                                                                                'Buy',
+                                                                            icon:
+                                                                                Icons.credit_card_rounded,
+                                                                            onTapped: () {}),
+                                                                        dialogMenuItem(
+                                                                            title:
+                                                                                'Send',
+                                                                            icon:
+                                                                                Icons.send,
+                                                                            onTapped: () {}),
+                                                                        dialogMenuItem(
+                                                                            title:
+                                                                                'Sell',
+                                                                            icon:
+                                                                                Icons.sell_rounded,
+                                                                            onTapped: () {}),
+                                                                        dialogMenuItem(
+                                                                            title:
+                                                                                'More info',
+                                                                            icon:
+                                                                                Icons.info,
+                                                                            onTapped: () {}),
+                                                                      ],
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.more_vert_rounded,
+                                                      color: Colors.black,
+                                                      size: 24,
+                                                    ),
+                                                    splashRadius: 32,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: Colors.grey.shade400,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors
+                                                            .grey.shade200,
+                                                        spreadRadius: 2,
+                                                        blurRadius: 5,
+                                                        offset: Offset(0,
+                                                            0), // changes position of shadow
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                        ],
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 24),
+                                        child: Divider(
+                                          color: Colors.black45,
+                                        ),
+                                      ),
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 4),
+                                                child: Text(
+                                                  "Token name:",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 4),
+                                                child: Text(
+                                                  token.name,
+                                                  style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                    fontSize: 12,
+                                                    color: Colors.grey.shade500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 4),
+                                                child: Text(
+                                                  "Issuer account ID:",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 4),
+                                                  child: RichText(
+                                                    text: TextSpan(
+                                                      children: <TextSpan>[
+                                                        TextSpan(
+                                                          text: token
+                                                              .issuerAccountId
+                                                              .substring(0, 5),
+                                                          style: TextStyle(
+                                                            color: Colors
+                                                                .grey.shade500,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                        TextSpan(
+                                                          text: '...',
+                                                          style: TextStyle(
+                                                            color: Colors
+                                                                .grey.shade500,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                        TextSpan(
+                                                          text: token
+                                                              .issuerAccountId
+                                                              .substring(
+                                                                  widget.accountId
+                                                                          .length -
+                                                                      5,
+                                                                  widget
+                                                                      .accountId
+                                                                      .length),
+                                                          style: TextStyle(
+                                                            color: Colors
+                                                                .grey.shade500,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )),
+                                            ],
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                const Divider(),
+                              ],
+                            );
+                          },
+                          itemCount: tokens.length,
+                        ),
+                        const Center(child: Text('Tab 2')),
                       ],
+                      controller: controller,
                     ),
                   )
                 ],
@@ -262,7 +641,7 @@ class _WalletPageState extends State<WalletPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    margin: EdgeInsets.all(8),
+                    margin: const EdgeInsets.all(8),
                     width: 24,
                     height: 24,
                     child: const CircularProgressIndicator(
@@ -282,6 +661,217 @@ class _WalletPageState extends State<WalletPage> {
     );
   }
 
+  Widget dialogMenuItem(
+      {required IconData icon,
+      required String title,
+      required Function onTapped}) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.primaryColor,
+            ),
+            child: IconButton(
+              icon: Icon(icon, color: Colors.white),
+              onPressed: onTapped(),
+              color: Colors.white,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              title,
+              style: TextStyle(color: Colors.black),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  double trustAmount = 0;
+  final _trustFormKey = GlobalKey<FormState>();
+
+  Future<dynamic> showTrustBottomSheet(BuildContext context, Token token) {
+    return showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Wrap(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width,
+              padding: MediaQuery.of(context).viewInsets,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+              ),
+              child: Form(
+                key: _trustFormKey,
+                child: BlocConsumer<TransactionCubit, TransactionCubitState>(
+                  bloc: _transactionCubit,
+                  listener: (context, state) {
+                    if (state is TrustingTokenDone) {
+                      setState(() {
+                        token.trusted = true;
+                      });
+                    }
+                  },
+                  builder: (context, state) => Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Text(
+                            'Enter amount of ${token.symbol} token want to trust'),
+                      ),
+                      Container(
+                        height: 48,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: AppTheme.primaryColor, width: 2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextFormField(
+                          autocorrect: false,
+                          validator: (value) {
+                            if (value != "") {
+                              if (double.parse(value!) > 500) {
+                                return 'Amount of trusted token must be less than 500';
+                              }
+                              return null;
+                            } else {
+                              return 'Please enter amount';
+                            }
+                          },
+                          autofocus: true,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            focusColor: Colors.white,
+                          ),
+                          onChanged: (value) {
+                            trustAmount = double.parse(value);
+                          },
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 24, right: 24, top: 8, bottom: 16),
+                        child: SizedBox(
+                          width: double.maxFinite,
+                          child: RawMaterialButton(
+                            onPressed: () {
+                              if (_trustFormKey.currentState!.validate()) {
+                                _transactionCubit.createTrustline(
+                                    issuerSecretSeed: issuerSecretSeed,
+                                    trusterSecretSeed: keys[activeAccountId],
+                                    tokenName: token.symbol,
+                                    trustLimit: trustAmount.toString());
+                              }
+                            },
+                            elevation: 0,
+                            fillColor: AppTheme.primaryColor,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: BlocBuilder<TransactionCubit,
+                                  TransactionCubitState>(
+                                bloc: _transactionCubit,
+                                builder: (context, state) {
+                                  if (state is TrustingToken) {
+                                    return Row(
+                                      children: [
+                                        const Text(
+                                          'Trusting token',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              color: Colors.white),
+                                        ),
+                                        Container(
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 8),
+                                          child:
+                                              const CircularProgressIndicator(),
+                                          width: 16,
+                                          height: 16,
+                                        )
+                                      ],
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                    );
+                                  } else if (state is TrustingTokenDone) {
+                                    return Row(
+                                      children: [
+                                        const Text(
+                                          'Token trusted',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 16,
+                                              color: Colors.white),
+                                        ),
+                                        Container(
+                                          margin: const EdgeInsets.only(
+                                              left: 8, right: 8, bottom: 8),
+                                          child: const Icon(
+                                            Icons.check_circle_outline,
+                                            color: Colors.white,
+                                          ),
+                                          width: 16,
+                                          height: 16,
+                                        )
+                                      ],
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                    );
+                                  }
+                                  return const Text(
+                                    'Trust',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (state is TrustingTokenFailure)
+                        Text('An Error Accord\n ${state.message.toString()}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: Colors.red))
+                    ],
+                  ),
+                ),
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
   SliverChildListDelegate sliverAccountInfoHeader(
       xlmAmount, Account account, BuildContext context) {
     return SliverChildListDelegate(
@@ -296,7 +886,7 @@ class _WalletPageState extends State<WalletPage> {
                 return Wrap(
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.only(
@@ -320,8 +910,8 @@ class _WalletPageState extends State<WalletPage> {
                             leading: Container(
                               width: 50,
                               height: 50,
-                              margin: EdgeInsets.symmetric(vertical: 8),
-                              padding: EdgeInsets.all(2),
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: activeAccountId == widget.accountId
@@ -393,7 +983,7 @@ class _WalletPageState extends State<WalletPage> {
               Container(
                 width: 12,
                 height: 12,
-                margin: EdgeInsets.symmetric(horizontal: 4),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.green,
@@ -413,8 +1003,8 @@ class _WalletPageState extends State<WalletPage> {
         Container(
           width: 50,
           height: 50,
-          margin: EdgeInsets.only(top: 24, bottom: 0),
-          padding: EdgeInsets.all(2),
+          margin: const EdgeInsets.only(top: 24, bottom: 0),
+          padding: const EdgeInsets.all(2),
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: AppTheme.primaryColor,
@@ -451,7 +1041,7 @@ class _WalletPageState extends State<WalletPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                   color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.all(Radius.circular(25))),
+                  borderRadius: const BorderRadius.all(Radius.circular(25))),
               child: RichText(
                 text: TextSpan(
                   children: <TextSpan>[
@@ -485,11 +1075,11 @@ class _WalletPageState extends State<WalletPage> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: account.accountId));
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('Account id copied to your clipboard'),
+                  content: const Text('Account id copied to your clipboard'),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                   behavior: SnackBarBehavior.floating,
-                  margin: EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(16),
                   backgroundColor: AppTheme.primaryColor,
                   duration: const Duration(milliseconds: 500),
                 ));
@@ -507,12 +1097,47 @@ class _WalletPageState extends State<WalletPage> {
   }
 }
 
+class AssetsHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double height;
+  AssetsHeaderDelegate(this.height);
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return TabBar(
+      labelPadding: const EdgeInsets.symmetric(vertical: 8),
+      tabs: const [
+        Tab(
+          text: 'TOKENS',
+        ),
+        Tab(
+          text: 'NFTs',
+        )
+      ],
+      controller: controller,
+      indicatorColor: AppTheme.primaryColor,
+      unselectedLabelColor: Colors.grey,
+      labelColor: AppTheme.primaryColor,
+    );
+  }
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
+  }
+}
+
 class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String title;
   final double height;
 
-  SectionHeaderDelegate(this.title, [this.height = 65]);
-  final TransactionCubit _transactionCubit = TransactionCubit();
+  SectionHeaderDelegate(this.title, [this.height = 82]);
   double amount = 0;
 
   @override
@@ -522,7 +1147,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
       child: Container(
         color: Colors.white,
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 0),
+        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -534,7 +1159,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: AppTheme.primaryColor,
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.credit_card_rounded),
+                    icon: const Icon(Icons.credit_card_rounded),
                     onPressed: () {},
                     color: Colors.white,
                   ),
@@ -573,7 +1198,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                   ),
                   child: IconButton(
                     // iconSize: 16,
-                    icon: Icon(Icons.send),
+                    icon: const Icon(Icons.send),
                     onPressed: () {
                       Account? sender, receiver;
                       for (Account account in accounts) {
@@ -585,12 +1210,12 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                       }
                       if (receiver == null) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
+                          content: const Text(
                               'The reciever account is not funded\nTry to change account and it will be funded'),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16)),
                           behavior: SnackBarBehavior.floating,
-                          margin: EdgeInsets.all(16),
+                          margin: const EdgeInsets.all(16),
                           backgroundColor: AppTheme.primaryColor,
                           duration: const Duration(milliseconds: 1250),
                         ));
@@ -615,14 +1240,14 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: AppTheme.primaryColor,
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.swap_horiz),
+                    icon: const Icon(Icons.swap_horiz),
                     onPressed: () {},
                     color: Colors.white,
                   ),
                 ),
-                Text(
+                const Text(
                   'Swap',
-                  style: TextStyle(color: AppTheme.primaryColor),
+                  style: const TextStyle(color: AppTheme.primaryColor),
                 )
               ],
             ),
@@ -726,7 +1351,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                       height: 48,
                       margin: const EdgeInsets.symmetric(
                           vertical: 16, horizontal: 24),
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         border:
                             Border.all(color: AppTheme.primaryColor, width: 2),
@@ -765,7 +1390,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                             borderRadius: BorderRadius.all(Radius.circular(8)),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             child: BlocConsumer<TransactionCubit,
                                 TransactionCubitState>(
                               bloc: _transactionCubit,
@@ -809,11 +1434,14 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                                           color: Colors.red));
                                 } else if (state is TransactionPaymentSent) {}
 
-                                return const Text('Submit',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                        color: Colors.white));
+                                return const Text(
+                                  'Submit',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -850,9 +1478,9 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Divider(),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Divider(),
         )
       ],
     );
