@@ -8,3 +8,5 @@ const String discontrollerSecretSeed =
 
 const String issuerSecretSeed =
     'SAEBQN2THRPL23HDXNJAMR76GM57HFWSG6Y7J6MRJ2LMVVDOGBZ2I23A';
+const String issuerAccountId =
+    'GCTQGA4I4KRI3O3KS3SDQ3RTO5NXBMFVIR37JLOXG76WPUQW7FLFYB4M';

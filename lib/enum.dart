@@ -1,0 +1,4 @@
+enum TransactionPaymentType {
+  buy,
+  send
+}

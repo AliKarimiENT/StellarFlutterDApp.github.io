@@ -15,7 +15,7 @@ class BasicInfoCubit extends Cubit<BasicInfoState> {
   Future<void> fundAccount(String accountId) async {
     try {
       emit(FundAccountLoading());
-
+    
       bool funded = await FriendBot.fundTestAccount(accountId);
 
       final pref = await SharedPreferences.getInstance();

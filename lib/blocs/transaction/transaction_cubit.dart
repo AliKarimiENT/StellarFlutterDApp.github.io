@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
+import '../../enum.dart';
+
 part 'transaction_state.dart';
 
 class TransactionCubit extends Cubit<TransactionCubitState> {
@@ -59,6 +61,10 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     } catch (e) {
       TransactionPaymentFailure(e.toString());
     }
+  }
+
+  void initTrust() {
+    emit(TransactionCubitInitial());
   }
 
   Future<void> createTrustline({
@@ -118,13 +124,13 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     }
   }
 
-  Future<void> sendNonNativePayment({
-    required String issuerSecretSeed,
-    required String senderSecretSeed,
-    required String trusterSecretSeed,
-    required String tokenName,
-    required String amount,
-  }) async {
+  Future<void> sendNonNativePayment(
+      {required String issuerSecretSeed,
+      required String senderSecretSeed,
+      required String trusterSecretSeed,
+      required String tokenName,
+      required String amount,
+      required TransactionPaymentType type}) async {
     try {
       emit(TransactionPaymentSending());
       stl.KeyPair trustorKeyPair =
@@ -133,7 +139,12 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
 
       stl.KeyPair issuerKeyPair = stl.KeyPair.fromSecretSeed(issuerSecretSeed);
       String issuerAccountId = issuerKeyPair.accountId;
-      stl.AccountResponse issuer = await sdk.accounts.account(issuerAccountId);
+      // stl.AccountResponse issuer = await sdk.accounts.account(issuerAccountId);
+
+      stl.KeyPair senderKeyPair = stl.KeyPair.fromSecretSeed(senderSecretSeed);
+
+      stl.AccountResponse sender =
+          await sdk.accounts.account(senderKeyPair.accountId);
 
       stl.Asset asset =
           stl.AssetTypeCreditAlphaNum4(tokenName, issuerAccountId);
@@ -141,33 +152,59 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       stl.AccountResponse trustor =
           await sdk.accounts.account(trustorAccountId);
 
-      stl.Transaction transaction = stl.TransactionBuilder(issuer)
+      stl.Transaction transaction = stl.TransactionBuilder(sender)
           .addOperation(
               stl.PaymentOperationBuilder(trustorAccountId, asset, amount)
                   .build())
           .build();
 
       // The issuer signs the transaction.
-      transaction.sign(issuerKeyPair, stl.Network.TESTNET);
+      transaction.sign(senderKeyPair, stl.Network.TESTNET);
 
       stl.SubmitTransactionResponse response =
           await sdk.submitTransaction(transaction);
 
       // Submit the transaction to the stellar network.
       response = await sdk.submitTransaction(transaction);
-
+      late String failureMessage;
       if (!response.success) {
         print("something went wrong.");
-      }
+        for (stl.Balance? balance in trustor.balances!) {
+          if (balance!.assetType != stl.Asset.TYPE_NATIVE &&
+              balance.assetCode == tokenName &&
+              double.parse(balance.balance!) + double.parse(amount)  >= double.parse(balance.limit!)) {
+            if (type == TransactionPaymentType.buy) {
+              failureMessage =
+                  "You are not allowed to buy asset more then amount you trusted";
+            } else {
+              failureMessage =
+                  "You are not allowed to send asset more then amount other account is trusted";
+            }
+            emit(TransactionPaymentFailure(failureMessage));
+            break;
+          }
+        }
+      } else {
+        emit(
+          TransactionPaymentSent(
+            transaction: transaction,
+            time: DateTime.now(),
+            fee: transaction.fee!.toDouble() * pow(10, -7).toDouble(),
+            receiver: trustorAccountId,
+            amount: amount,
+            type: tokenName,
+          ),
+        );
 
-      // (info) check the trustor account data to see if the trustor received the payment.
-      trustor = await sdk.accounts.account(trustorAccountId);
-      for (stl.Balance? balance in trustor.balances!) {
-        if (balance!.assetType != stl.Asset.TYPE_NATIVE &&
-            balance.assetCode == "IOM" &&
-            double.parse(balance.balance!) > 90) {
-          print("trustor received IOM payment");
-          break;
+        // (info) check the trustor account data to see if the trustor received the payment.
+        trustor = await sdk.accounts.account(trustorAccountId);
+        for (stl.Balance? balance in trustor.balances!) {
+          if (balance!.assetType != stl.Asset.TYPE_NATIVE &&
+              balance.assetCode == "IOM" &&
+              double.parse(balance.balance!) > 90) {
+            print("trustor received IOM payment");
+            break;
+          }
         }
       }
     } catch (e) {
