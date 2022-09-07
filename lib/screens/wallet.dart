@@ -25,6 +25,7 @@ late List<Token> tokens;
 late TabController controller;
 late int trustedTokens = 0;
 late Map<String, dynamic> keys;
+String? xlmAmount;
 
 class WalletPage extends StatefulWidget {
   const WalletPage(this.accountId, {Key? key}) : super(key: key);
@@ -268,8 +269,6 @@ class _WalletPageState extends State<WalletPage>
                 }
                 accounts.add(newAccount);
               }
-              var id = state.account.accountId;
-              var xlmAmount;
 
               for (var token in tokens) {
                 for (stl.Balance? balance in state.account.balances!) {

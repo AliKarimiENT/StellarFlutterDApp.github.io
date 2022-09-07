@@ -258,11 +258,21 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       stl.AccountResponse selller = await sdk.accounts.account(sellerAccountId);
 
       // define our assets
-      stl.Asset sellingAsset =
-          stl.AssetTypeCreditAlphaNum4(sellingAssetName, issuerAccountId);
+      late stl.Asset sellingAsset;
+      if (sellingAssetName == "XLM") {
+        sellingAsset = stl.Asset.NATIVE;
+      } else {
+        sellingAsset =
+            stl.AssetTypeCreditAlphaNum4(sellingAssetName, issuerAccountId);
+      }
 
-      stl.Asset buyingAsset =
-          stl.AssetTypeCreditAlphaNum4(buyingAssetName, issuerAccountId);
+      late stl.Asset buyingAsset;
+      if (buyingAssetName == "XLM") {
+        buyingAsset = stl.Asset.NATIVE;
+      } else {
+        buyingAsset =
+            stl.AssetTypeCreditAlphaNum4(buyingAssetName, issuerAccountId);
+      }
 
       // Create the offer
       // Price of 1 unit of selling in terms of buying
@@ -286,16 +296,25 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
         String failureMessage = '';
         for (var error
             in response.extras!.resultCodes!.operationsResultCodes!.toList()) {
-          failureMessage += '$error ';
+          failureMessage += '$error';
         }
         emit(CreatingOfferFailed(message: failureMessage));
       } else {
-        stl.Page<stl.OfferResponse> offers =
-            await sdk.offers.forAccount(sellerAccountId).execute();
         emit(CreatedOffer(type: OfferType.buy));
       }
     } catch (e) {
       emit(CreatingOfferFailed(message: e.toString()));
+    }
+  }
+
+  Future<void> getOffers({required String accountId}) async {
+    try {
+      emit(LoadingOffers());
+      stl.Page<stl.OfferResponse> offers =
+          await sdk.offers.forAccount(accountId).execute();
+      emit(LoadedOffers(records: offers.records!));
+    } catch (e) {
+      emit(LoadingOffersFailed(message: e.toString()));
     }
   }
 }
