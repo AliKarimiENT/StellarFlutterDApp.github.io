@@ -59,7 +59,7 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       stl.Page<stl.OperationResponse> payments =
           await sdk.payments.forAccount(senderId).execute();
     } catch (e) {
-      TransactionPaymentFailure(e.toString());
+      TransactionPaymentFailed(e.toString());
     }
   }
 
@@ -72,9 +72,10 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     required String trusterSecretSeed,
     required String tokenName,
     required String trustLimit,
+    required ChangeTrustType type,
   }) async {
     try {
-      emit(TrustingToken());
+      emit(ChangingTokenTrust(type: type));
       // First we create the trustor key pair from the seed of the trustor so that we can use it to sign the transaction.
       stl.KeyPair trustorKeyPair =
           stl.KeyPair.fromSecretSeed(trusterSecretSeed);
@@ -85,6 +86,18 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       // Load the trustor's account details including it's current sequence number.
       stl.AccountResponse trustor =
           await sdk.accounts.account(trustorAccountId);
+
+      if (int.parse(trustLimit) == 0) {
+        for (stl.Balance? balance in trustor.balances!) {
+          if (balance!.assetCode == tokenName) {
+            if (double.tryParse(balance.balance!)!.toInt() != 0) {
+              emit(TrustingTokenFailed(
+                  'Unable to remove trustline with a non-zero asset balance'));
+              break;
+            }
+          }
+        }
+      }
 
       stl.KeyPair issuerKeyPair = stl.KeyPair.fromSecretSeed(issuerSecretSeed);
 
@@ -114,13 +127,23 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
 
       if (!response.success) {
         print("something went wrong.");
-        emit(TrustingTokenFailure('Something went wrong'));
+        emit(TrustingTokenFailed('Something went wrong'));
       }
       print(transaction);
       print(response);
-      emit(TrustingTokenDone());
+      if (double.tryParse(trustLimit) == 0) {
+        emit(
+          TrustingTokenDone(
+              trusted: false, limit: int.tryParse(trustLimit)!, type: type),
+        );
+      } else {
+        emit(
+          TrustingTokenDone(
+              trusted: true, limit: int.tryParse(trustLimit)!, type: type),
+        );
+      }
     } catch (e) {
-      emit(TrustingTokenFailure(e.toString()));
+      emit(TrustingTokenFailed(e.toString()));
     }
   }
 
@@ -166,13 +189,14 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
 
       // Submit the transaction to the stellar network.
       response = await sdk.submitTransaction(transaction);
-      late String failureMessage;
+      late String failureMessage = 'something went wrong';
       if (!response.success) {
-        print("something went wrong.");
+        print(failureMessage);
         for (stl.Balance? balance in trustor.balances!) {
           if (balance!.assetType != stl.Asset.TYPE_NATIVE &&
               balance.assetCode == tokenName &&
-              double.parse(balance.balance!) + double.parse(amount)  >= double.parse(balance.limit!)) {
+              double.parse(balance.balance!) + double.parse(amount) >=
+                  double.parse(balance.limit!)) {
             if (type == TransactionPaymentType.buy) {
               failureMessage =
                   "You are not allowed to buy asset more then amount you trusted";
@@ -180,10 +204,11 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
               failureMessage =
                   "You are not allowed to send asset more then amount other account is trusted";
             }
-            emit(TransactionPaymentFailure(failureMessage));
+            emit(TransactionPaymentFailed(failureMessage));
             break;
           }
         }
+        emit(TransactionPaymentFailed(failureMessage));
       } else {
         emit(
           TransactionPaymentSent(
@@ -208,7 +233,69 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
         }
       }
     } catch (e) {
-      emit(TransactionPaymentFailure(e.toString()));
+      emit(TransactionPaymentFailed(e.toString()));
+    }
+  }
+
+  Future<void> createSellOffer({
+    required String issuerSecretSeed,
+    required String sellerSecretSeed,
+    required String sellingAssetName,
+    required String buyingAssetName,
+    required int amountSelling, // amount of asset want to sell
+    required int amountBuying,
+  }) async {
+    try {
+      emit(CreatingOffer(type: OfferType.sell));
+      // seller key pair
+      stl.KeyPair sellerKeyPair = stl.KeyPair.fromSecretSeed(sellerSecretSeed);
+      String sellerAccountId = sellerKeyPair.accountId;
+
+      // issuer key pair
+      stl.KeyPair issuerKeyPair = stl.KeyPair.fromSecretSeed(issuerSecretSeed);
+      String issuerAccountId = issuerKeyPair.accountId;
+
+      stl.AccountResponse selller = await sdk.accounts.account(sellerAccountId);
+
+      // define our assets
+      stl.Asset sellingAsset =
+          stl.AssetTypeCreditAlphaNum4(sellingAssetName, issuerAccountId);
+
+      stl.Asset buyingAsset =
+          stl.AssetTypeCreditAlphaNum4(buyingAssetName, issuerAccountId);
+
+      // Create the offer
+      // Price of 1 unit of selling in terms of buying
+      var price = (double.tryParse(amountBuying.toString())! /
+              double.tryParse(amountSelling.toString())!)
+          .toString();
+      // Create the manage sell offer operation
+      stl.ManageSellOfferOperation ms = stl.ManageSellOfferOperationBuilder(
+              sellingAsset, buyingAsset, amountSelling.toString(), price)
+          .build();
+      stl.Transaction transaction =
+          stl.TransactionBuilder(selller).addOperation(ms).build();
+      // Sign
+      transaction.sign(sellerKeyPair, stl.Network.TESTNET);
+      stl.SubmitTransactionResponse response =
+          await sdk.submitTransaction(transaction).catchError((error) {
+        print(error.toString());
+      });
+
+      if (!response.success) {
+        String failureMessage = '';
+        for (var error
+            in response.extras!.resultCodes!.operationsResultCodes!.toList()) {
+          failureMessage += '$error ';
+        }
+        emit(CreatingOfferFailed(message: failureMessage));
+      } else {
+        stl.Page<stl.OfferResponse> offers =
+            await sdk.offers.forAccount(sellerAccountId).execute();
+        emit(CreatedOffer(type: OfferType.buy));
+      }
+    } catch (e) {
+      emit(CreatingOfferFailed(message: e.toString()));
     }
   }
 }

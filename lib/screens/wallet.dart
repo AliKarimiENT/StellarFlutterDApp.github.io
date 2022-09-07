@@ -60,13 +60,50 @@ class _WalletPageState extends State<WalletPage>
         symbol: 'DIGI',
         image:
             'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/dgb.svg',
-        name: 'DIGI token',
+        name: 'DigiByte',
         issuerName: 'Ali Karimi',
         issuerAccountId: issuerAccountId,
-        value: 1.5,
+        value: 1,
         balance: 0,
+        limit: 0,
         trusted: false,
-      )
+      ),
+      Token(
+        symbol: 'ETH',
+        image:
+            'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/eth.svg',
+        name: 'Ethereum',
+        issuerName: 'Ali Karimi',
+        issuerAccountId: issuerAccountId,
+        value: 1,
+        balance: 0,
+        limit: 0,
+        trusted: false,
+      ),
+      Token(
+        symbol: 'EUR',
+        image:
+            'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/eur.svg',
+        name: 'Euro',
+        issuerName: 'Ali Karimi',
+        issuerAccountId: issuerAccountId,
+        value: 1,
+        balance: 0,
+        limit: 0,
+        trusted: false,
+      ),
+      Token(
+        symbol: 'GOLD',
+        image:
+            'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/gold.svg',
+        name: 'Dragonereum Gold',
+        issuerName: 'Ali Karimi',
+        issuerAccountId: issuerAccountId,
+        value: 1,
+        balance: 0,
+        limit: 0,
+        trusted: false,
+      ),
     ];
   }
 
@@ -233,36 +270,20 @@ class _WalletPageState extends State<WalletPage>
               }
               var id = state.account.accountId;
               var xlmAmount;
-              for (var token in tokens) {
-                if (token.trusted) {
-                  trustedTokens++;
-                }
-                token.balance = 0;
-              }
 
-              for (stl.Balance? balance in state.account.balances!) {
-                if (balance!.assetType != stl.Asset.TYPE_NATIVE) {
-                  for (var token in tokens) {
+              for (var token in tokens) {
+                for (stl.Balance? balance in state.account.balances!) {
+                  if (balance!.assetType != stl.Asset.TYPE_NATIVE) {
                     if (token.symbol == balance.assetCode) {
                       token.trusted = true;
-                      token.balance = double.parse(balance.balance!);
-                    } else {
-                      token.balance = 0;
+                      trustedTokens++;
+                      token.limit = double.tryParse(balance.limit!)!.toInt();
+                      token.balance = double.parse(balance.balance!).toInt();
                     }
+                  } else {
+                    xlmAmount = balance.balance;
                   }
-                } else {
-                  xlmAmount = balance.balance;
-                  print("Balance: ${balance.balance} XLM");
                 }
-                // switch (balance!.assetType) {
-                //   case stl.Asset.TYPE_NATIVE:
-                //
-                //     break;
-
-                //   default:
-                //     print(
-                //         "Balance: ${balance.balance} ${balance.assetCode} Issuer: ${balance.assetIssuer}");
-                // }
               }
 
               return CustomScrollView(
@@ -283,7 +304,7 @@ class _WalletPageState extends State<WalletPage>
                     child: TabBarView(
                       children: [
                         ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
+                          physics: const PageScrollPhysics(),
                           itemBuilder: (context, index) {
                             var token = tokens[index];
                             return Column(
@@ -316,44 +337,30 @@ class _WalletPageState extends State<WalletPage>
                                                     child: Text(
                                                       token.symbol,
                                                       style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16,
-                                                          color: Colors.black
-                                                              .withOpacity(
-                                                                  0.80)),
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                        color: Colors.black
+                                                            .withOpacity(0.80),
+                                                      ),
                                                     ),
                                                   ),
                                                   token.balance != 0
-                                                      ? Text(
-                                                          token.balance
-                                                              .toString(),
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .normal,
-                                                              fontSize: 12,
-                                                              color: Colors
-                                                                  .black
-                                                                  .withOpacity(
-                                                                      0.80)),
-                                                        )
+                                                      ? AssetRowInfoItem(
+                                                          title: 'Balance',
+                                                          value: token.balance
+                                                              .toString())
                                                       : Container(),
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 4),
-                                                    child: Text(
-                                                      "${token.value} XLM",
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.normal,
-                                                          fontSize: 12,
-                                                          color: Colors.black
-                                                              .withOpacity(
-                                                                  0.80)),
-                                                    ),
-                                                  ),
+                                                  token.limit != 0
+                                                      ? AssetRowInfoItem(
+                                                          title: 'Trusted',
+                                                          value: token.limit
+                                                              .toString())
+                                                      : Container(),
+                                                  AssetRowInfoItem(
+                                                      title: 'Value',
+                                                      value:
+                                                          '${token.value} XLM'),
                                                 ],
                                               ),
                                             ),
@@ -439,16 +446,46 @@ class _WalletPageState extends State<WalletPage>
                                                                             8),
                                                                 child: Wrap(
                                                                   children: [
-                                                                    Text(
-                                                                      token
-                                                                          .symbol,
-                                                                      style: const TextStyle(
-                                                                          fontSize:
-                                                                              20,
-                                                                          fontWeight: FontWeight
-                                                                              .w500,
-                                                                          color:
-                                                                              AppTheme.primaryColor),
+                                                                    Row(
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .spaceBetween,
+                                                                      children: [
+                                                                        Text(
+                                                                          token
+                                                                              .symbol,
+                                                                          style: const TextStyle(
+                                                                              fontSize: 20,
+                                                                              fontWeight: FontWeight.w500,
+                                                                              color: AppTheme.primaryColor),
+                                                                        ),
+                                                                        RawMaterialButton(
+                                                                          onPressed:
+                                                                              () {
+                                                                            _transactionCubit.initTrust();
+                                                                            showTrustBottomSheet(context,
+                                                                                token);
+                                                                          },
+                                                                          elevation:
+                                                                              0,
+                                                                          hoverElevation:
+                                                                              0,
+                                                                          highlightElevation:
+                                                                              0,
+                                                                          fillColor:
+                                                                              Colors.white,
+                                                                          shape: const RoundedRectangleBorder(
+                                                                              borderRadius: BorderRadius.all(Radius.circular(8)),
+                                                                              side: BorderSide(color: AppTheme.primaryColor, width: 2)),
+                                                                          child:
+                                                                              const Padding(
+                                                                            padding:
+                                                                                EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                                                            child:
+                                                                                Text('Change Trust', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.black)),
+                                                                          ),
+                                                                        ),
+                                                                      ],
                                                                     ),
                                                                     const Padding(
                                                                       padding: EdgeInsets.symmetric(
@@ -730,7 +767,7 @@ class _WalletPageState extends State<WalletPage>
     );
   }
 
-  double trustAmount = 0;
+  int trustAmount = 0;
   final _trustFormKey = GlobalKey<FormState>();
 
   Future<dynamic> showTrustBottomSheet(BuildContext context, Token token) {
@@ -756,10 +793,20 @@ class _WalletPageState extends State<WalletPage>
                   bloc: _transactionCubit,
                   listener: (context, state) {
                     if (state is TrustingTokenDone) {
-                      setState(() {
-                        token.trusted = true;
-                        trustedTokens++;
-                      });
+                      _infoCubit.getBasicAccountInfo(activeAccountId);
+                      if (state.trusted) {
+                        setState(() {
+                          token.trusted = true;
+                          token.limit = state.limit;
+                          trustedTokens++;
+                        });
+                      } else {
+                        setState(() {
+                          token.trusted = false;
+                          token.limit = state.limit;
+                          trustedTokens--;
+                        });
+                      }
                     }
                   },
                   builder: (context, state) => Column(
@@ -793,11 +840,12 @@ class _WalletPageState extends State<WalletPage>
                           },
                           autofocus: true,
                           decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            focusColor: Colors.white,
-                          ),
+                              fillColor: Colors.white,
+                              focusColor: Colors.white,
+                              hintText:
+                                  'To delete trust, set the trust limit to 0'),
                           onChanged: (value) {
-                            trustAmount = double.parse(value);
+                            trustAmount = int.parse(value);
                           },
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
@@ -810,14 +858,22 @@ class _WalletPageState extends State<WalletPage>
                           width: double.maxFinite,
                           child: RawMaterialButton(
                             onPressed: () {
-                              if (!token.trusted) {
-                                if (_trustFormKey.currentState!.validate()) {
-                                  _transactionCubit.createTrustline(
-                                      issuerSecretSeed: issuerSecretSeed,
-                                      trusterSecretSeed: keys[activeAccountId],
-                                      tokenName: token.symbol,
-                                      trustLimit: trustAmount.toString());
+                              if (_trustFormKey.currentState!.validate()) {
+                                late ChangeTrustType type;
+                                if (trustAmount == 0) {
+                                  type = ChangeTrustType.delete;
+                                } else if (token.limit == 0) {
+                                  type = ChangeTrustType.create;
+                                } else if (trustAmount != token.limit) {
+                                  type = ChangeTrustType.modify;
                                 }
+                                _transactionCubit.createTrustline(
+                                  issuerSecretSeed: issuerSecretSeed,
+                                  trusterSecretSeed: keys[activeAccountId],
+                                  tokenName: token.symbol,
+                                  trustLimit: trustAmount.toString(),
+                                  type: type,
+                                );
                               }
                             },
                             elevation: 0,
@@ -832,11 +888,23 @@ class _WalletPageState extends State<WalletPage>
                                   TransactionCubitState>(
                                 bloc: _transactionCubit,
                                 builder: (context, state) {
-                                  if (state is TrustingToken) {
+                                  if (state is ChangingTokenTrust) {
+                                    late String buttonText;
+                                    switch (state.type) {
+                                      case ChangeTrustType.create:
+                                        buttonText = 'Trusting token';
+                                        break;
+                                      case ChangeTrustType.modify:
+                                        buttonText = "Token's trust modifying";
+                                        break;
+                                      case ChangeTrustType.delete:
+                                        buttonText = "Token's trust deleting";
+                                        break;
+                                    }
                                     return Row(
                                       children: [
-                                        const Text(
-                                          'Trusting token',
+                                        Text(
+                                          buttonText,
                                           style: TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 16,
@@ -857,11 +925,23 @@ class _WalletPageState extends State<WalletPage>
                                           MainAxisAlignment.center,
                                     );
                                   } else if (state is TrustingTokenDone) {
+                                    late String buttonText;
+                                    switch (state.type) {
+                                      case ChangeTrustType.create:
+                                        buttonText = 'Token trusted';
+                                        break;
+                                      case ChangeTrustType.modify:
+                                        buttonText = "Token's trust modified";
+                                        break;
+                                      case ChangeTrustType.delete:
+                                        buttonText = "Token's trust deleted";
+                                        break;
+                                    }
                                     return Row(
                                       children: [
-                                        const Text(
-                                          'Token trusted',
-                                          style: TextStyle(
+                                        Text(
+                                          buttonText,
+                                          style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 16,
                                               color: Colors.white),
@@ -897,7 +977,7 @@ class _WalletPageState extends State<WalletPage>
                           ),
                         ),
                       ),
-                      if (state is TrustingTokenFailure)
+                      if (state is TrustingTokenFailed)
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text('${state.message.toString()}',
@@ -1303,7 +1383,7 @@ class _WalletPageState extends State<WalletPage>
                           ),
                         ),
                       ),
-                      if (state is TransactionPaymentFailure)
+                      if (state is TransactionPaymentFailed)
                         Text('An Error Accord\n ${state.message.toString()}',
                             style: const TextStyle(
                                 fontWeight: FontWeight.w700,
@@ -1406,14 +1486,13 @@ class _WalletPageState extends State<WalletPage>
                             onPressed: () {
                               if (_sendAssetFormKey.currentState!.validate()) {
                                 _transactionCubit.sendNonNativePayment(
-                                  issuerSecretSeed: issuerSecretSeed,
-                                  senderSecretSeed: senderSecretSeed,
-                                  trusterSecretSeed: trusterSecretSeed,
-                                  tokenName: token.symbol,
-                                  amount: buyAssetAmount.toString(),
-                                  type: TransactionPaymentType.send);
+                                    issuerSecretSeed: issuerSecretSeed,
+                                    senderSecretSeed: senderSecretSeed,
+                                    trusterSecretSeed: trusterSecretSeed,
+                                    tokenName: token.symbol,
+                                    amount: buyAssetAmount.toString(),
+                                    type: TransactionPaymentType.send);
                               }
-                              
                             },
                             elevation: 0,
                             fillColor: AppTheme.primaryColor,
@@ -1492,10 +1571,11 @@ class _WalletPageState extends State<WalletPage>
                           ),
                         ),
                       ),
-                      if (state is TransactionPaymentFailure)
+                      if (state is TransactionPaymentFailed)
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text('An Error Accord\n ${state.message.toString()}',
+                          child: Text(
+                              'An Error Accord\n ${state.message.toString()}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
@@ -1509,6 +1589,42 @@ class _WalletPageState extends State<WalletPage>
           ],
         );
       },
+    );
+  }
+}
+
+class AssetRowInfoItem extends StatelessWidget {
+  const AssetRowInfoItem({
+    Key? key,
+    required this.title,
+    required this.value,
+  }) : super(key: key);
+
+  final String title;
+  final String value;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          Text(
+            '$title: ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: Colors.black.withOpacity(0.80),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 12,
+                color: Colors.black.withOpacity(0.80)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1590,6 +1706,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                           duration: const Duration(milliseconds: 800),
                         ));
                       } else {
+                        _transactionCubit.emit(TransactionCubitInitial());
                         showBuyAssetBottomSheet(context);
                       }
                     },
@@ -1858,7 +1975,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                                         CrossAxisAlignment.center,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                   );
-                                } else if (state is TransactionPaymentFailure) {
+                                } else if (state is TransactionPaymentFailed) {
                                   return const Text('An Error Accord',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w700,
@@ -1923,168 +2040,180 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                 child: BlocConsumer<TransactionCubit, TransactionCubitState>(
                   bloc: _transactionCubit,
                   listener: (context, state) {},
-                  builder: (context, state) => Column(
-                    children: [
-                      Container(
-                        child: DropdownButton<String>(
-                          value: selectedValue,
-                          items: list
-                              .map<DropdownMenuItem<String>>(
-                                  (String value) => DropdownMenuItem(
-                                        child: Text(value),
-                                        value: value,
-                                      ))
-                              .toList(),
-                          onChanged: (value) {
-                            // setState(() {
-                            selectedValue = value!;
-                            for (var token in tokens) {
-                              if (token.symbol == selectedValue) {
-                                selectedToken = token;
-                              }
-                            }
-                            // });
-                          },
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 16),
-                        child: Text('Enter amount of token want to buy'),
-                      ),
-                      Container(
-                        height: 48,
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 24),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color: AppTheme.primaryColor, width: 2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: TextFormField(
-                          autocorrect: false,
-                          validator: (value) {
-                            if (value != "") {
-                              if (double.parse(value!) > 500) {
-                                return 'Amount of token to buy must be less than 500';
-                              }
-                              return null;
-                            } else {
-                              return 'Please enter amount';
-                            }
-                          },
-                          autofocus: true,
-                          decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            focusColor: Colors.white,
-                          ),
-                          onChanged: (value) {
-                            buyAssetAmount = double.parse(value);
-                          },
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 24, right: 24, top: 8, bottom: 16),
-                        child: SizedBox(
-                          width: double.maxFinite,
-                          child: RawMaterialButton(
-                            onPressed: () {
-                              _transactionCubit.sendNonNativePayment(
-                                issuerSecretSeed: issuerSecretSeed,
-                                senderSecretSeed: discontrollerSecretSeed,
-                                trusterSecretSeed: keys[activeAccountId],
-                                tokenName: selectedToken.symbol,
-                                amount: buyAssetAmount.toString(),
-                                type: TransactionPaymentType.buy,
-                              );
-                            },
-                            elevation: 0,
-                            fillColor: AppTheme.primaryColor,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8)),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              child: BlocBuilder<TransactionCubit,
-                                  TransactionCubitState>(
-                                bloc: _transactionCubit,
-                                builder: (context, state) {
-                                  if (state is TransactionPaymentSending) {
-                                    return Row(
-                                      children: [
-                                        const Text(
-                                          'Sending request',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 16,
-                                              color: Colors.white),
-                                        ),
-                                        Container(
-                                          margin: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          child:
-                                              const CircularProgressIndicator(),
-                                          width: 16,
-                                          height: 16,
-                                        )
-                                      ],
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                    );
-                                  } else if (state is TransactionPaymentSent) {
-                                    return Row(
-                                      children: [
-                                        const Text(
-                                          'The token has been purchased',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 16,
-                                              color: Colors.white),
-                                        ),
-                                        Container(
-                                          margin: const EdgeInsets.only(
-                                              left: 8, right: 8, bottom: 8),
-                                          child: const Icon(
-                                            Icons.check_circle_outline,
-                                            color: Colors.white,
-                                          ),
-                                          width: 16,
-                                          height: 16,
-                                        )
-                                      ],
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                    );
+                  builder: (context, state) => StatefulBuilder(
+                    builder: (context, setState) {
+                      return Column(
+                        children: [
+                          DropdownButton<String>(
+                            value: selectedValue,
+                            items: list
+                                .map<DropdownMenuItem<String>>(
+                                    (String value) => DropdownMenuItem(
+                                          child: Text(value),
+                                          value: value,
+                                        ))
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedValue = value!;
+                                for (var token in tokens) {
+                                  if (token.symbol == selectedValue) {
+                                    selectedToken = token;
                                   }
-                                  return const Text(
-                                    'Buy',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                    ),
+                                }
+                              });
+                            },
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 16),
+                            child: Text('Enter amount of token want to buy'),
+                          ),
+                          Container(
+                            height: 48,
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 16, horizontal: 24),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: AppTheme.primaryColor, width: 2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: TextFormField(
+                              autocorrect: false,
+                              validator: (value) {
+                                if (value != "") {
+                                  if (double.parse(value!) > 500) {
+                                    return 'Amount of token to buy must be less than 500';
+                                  }
+                                  return null;
+                                } else {
+                                  return 'Please enter amount';
+                                }
+                              },
+                              autofocus: true,
+                              decoration: const InputDecoration(
+                                fillColor: Colors.white,
+                                focusColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                buyAssetAmount = double.parse(value);
+                              },
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 24, right: 24, top: 8, bottom: 16),
+                            child: SizedBox(
+                              width: double.maxFinite,
+                              child: RawMaterialButton(
+                                onPressed: () {
+                                  _transactionCubit.sendNonNativePayment(
+                                    issuerSecretSeed: issuerSecretSeed,
+                                    senderSecretSeed: discontrollerSecretSeed,
+                                    trusterSecretSeed: keys[activeAccountId],
+                                    tokenName: selectedToken.symbol,
+                                    amount: buyAssetAmount.toString(),
+                                    type: TransactionPaymentType.buy,
                                   );
                                 },
+                                elevation: 0,
+                                fillColor: AppTheme.primaryColor,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(8)),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: BlocConsumer<TransactionCubit,
+                                      TransactionCubitState>(
+                                    bloc: _transactionCubit,
+                                    listener: (context, state) {
+                                      if (state is TransactionPaymentSent) {
+                                        _infoCubit.getBasicAccountInfo(
+                                            activeAccountId);
+                                      }
+                                    },
+                                    builder: (context, state) {
+                                      if (state is TransactionPaymentSending) {
+                                        return Row(
+                                          children: [
+                                            const Text(
+                                              'Sending request',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                            Container(
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8),
+                                              child:
+                                                  const CircularProgressIndicator(),
+                                              width: 16,
+                                              height: 16,
+                                            )
+                                          ],
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                        );
+                                      } else if (state
+                                          is TransactionPaymentSent) {
+                                        return Row(
+                                          children: [
+                                            const Text(
+                                              'The token has been purchased',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 16,
+                                                  color: Colors.white),
+                                            ),
+                                            Container(
+                                              margin: const EdgeInsets.only(
+                                                  left: 8, right: 8, bottom: 8),
+                                              child: const Icon(
+                                                Icons.check_circle_outline,
+                                                color: Colors.white,
+                                              ),
+                                              width: 16,
+                                              height: 16,
+                                            )
+                                          ],
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                        );
+                                      }
+                                      return const Text(
+                                        'Buy',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      if (state is TransactionPaymentFailure)
-                        Text('An Error Accord\n ${state.message.toString()}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                                color: Colors.red))
-                    ],
+                          if (state is TransactionPaymentFailed)
+                            Text(
+                                'An Error Accord\n ${state.message.toString()}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                    color: Colors.red))
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),

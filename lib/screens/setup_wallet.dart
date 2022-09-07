@@ -14,7 +14,7 @@ class SetupWalletPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(),
+      appBar: CustomAppBar(context,false),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [

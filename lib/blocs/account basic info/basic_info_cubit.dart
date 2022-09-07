@@ -45,7 +45,7 @@ class BasicInfoCubit extends Cubit<BasicInfoState> {
       AccountResponse account = await sdk.accounts.account(accountId);
       print('Account info loaded');
       print(account.toString());
-      print('addount address ${account.accountId}');
+      print('account address ${account.accountId}');
       emit(AccountInfoLoaded(account));
     } catch (e) {
       emit(AccountInfoFailure(e.toString()));
