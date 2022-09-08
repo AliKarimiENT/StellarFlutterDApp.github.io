@@ -15,6 +15,7 @@ import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../models/token.dart';
+import '../widgets/row_info.dart';
 
 late String activeAccountId;
 late List<Account> accounts = [];
@@ -345,18 +346,18 @@ class _WalletPageState extends State<WalletPage>
                                                     ),
                                                   ),
                                                   token.balance != 0
-                                                      ? AssetRowInfoItem(
+                                                      ? RowInfoItem(
                                                           title: 'Balance',
                                                           value: token.balance
                                                               .toString())
                                                       : Container(),
                                                   token.limit != 0
-                                                      ? AssetRowInfoItem(
+                                                      ? RowInfoItem(
                                                           title: 'Trusted',
                                                           value: token.limit
                                                               .toString())
                                                       : Container(),
-                                                  AssetRowInfoItem(
+                                                  RowInfoItem(
                                                       title: 'Value',
                                                       value:
                                                           '${token.value} XLM'),
@@ -1592,41 +1593,6 @@ class _WalletPageState extends State<WalletPage>
   }
 }
 
-class AssetRowInfoItem extends StatelessWidget {
-  const AssetRowInfoItem({
-    Key? key,
-    required this.title,
-    required this.value,
-  }) : super(key: key);
-
-  final String title;
-  final String value;
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        children: [
-          Text(
-            '$title: ',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: Colors.black.withOpacity(0.80),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-                fontWeight: FontWeight.normal,
-                fontSize: 12,
-                color: Colors.black.withOpacity(0.80)),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class AssetsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double height;

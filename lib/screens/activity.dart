@@ -3,10 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
 import 'package:stellar_flutter_dapp/enum.dart';
 import 'package:stellar_flutter_dapp/screens/sell_offer.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
+import 'package:stellar_flutter_dapp/widgets/row_info.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../app_theme.dart';
@@ -69,6 +71,7 @@ class _ActivityPageState extends State<ActivityPage> {
       body: BlocProvider(
         create: (context) => _transactionCubit,
         child: CustomScrollView(
+          physics: const NeverScrollableScrollPhysics(),
           slivers: [
             SliverFillRemaining(
               hasScrollBody: true,
@@ -134,11 +137,13 @@ class _ActivityPageState extends State<ActivityPage> {
                             alignment: Alignment.center,
                           );
                         } else {
-                          return Container(
-                            child: const Text('Ali Karimi',
-                                style: TextStyle(color: Colors.black)),
-                            alignment: Alignment.center,
-                          );
+                          if (selectedIndex == 0) {
+                            return offersList();
+                          } else if (selectedIndex == 1) {
+                            return Center(child: Text('Transactions'));
+                          } else {
+                            return Center(child: Text('Operations'));
+                          }
                         }
                       },
                     ),
@@ -148,6 +153,136 @@ class _ActivityPageState extends State<ActivityPage> {
             )
           ],
         ),
+      ),
+    );
+  }
+
+  ListView offersList() {
+    return ListView.builder(
+        scrollDirection: Axis.vertical,
+        itemBuilder: (context, index) {
+          var offer = offers[index];
+          String? sellingAssetImage, buyingAssetImage;
+          late stl.AssetTypeCreditAlphaNum sellingAsset, buyingAsset;
+          late String sellingAssetName, buyingAssetName;
+          if (offer.selling!.type == 'native') {
+            sellingAssetImage =
+                'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/xlm.svg';
+            sellingAssetName = 'XLM';
+          } else {
+            sellingAsset = offer.selling as stl.AssetTypeCreditAlphaNum;
+            sellingAssetName = sellingAsset.mCode!;
+          }
+
+          if (offer.buying!.type == 'native') {
+            buyingAssetImage =
+                'https://cdn.jsdelivr.net/gh/atomiclabs/cryptocurrency-icons@1a63530be6e374711a8554f31b17e4cb92c25fa5/svg/black/xlm.svg';
+            buyingAssetName = 'XLM';
+          } else {
+            buyingAsset = offer.buying as stl.AssetTypeCreditAlphaNum;
+
+            buyingAssetName = buyingAsset.mCode!;
+          }
+
+          for (var token in tokens) {
+            if (offer.selling!.type != 'native') {
+              if (sellingAsset.mCode == token.symbol) {
+                sellingAssetImage = token.image;
+              }
+            }
+            if (offer.buying!.type != 'native') {
+              if (buyingAsset.mCode == token.symbol) {
+                buyingAssetImage = token.image;
+              }
+            }
+          }
+          return Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 16),
+                // height: 50,
+                // color: Colors.red,
+                child: Row(
+                  children: [
+                    offersAssetColumnImages(
+                        sellingAssetImage, buyingAssetImage),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          RowInfoItem(
+                            title: 'Seller',
+                            value: offer.seller!.accountId,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Selling',
+                            value: sellingAssetName,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Buying',
+                            value: buyingAssetName,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Amount',
+                            value: offer.amount ?? '',
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Price',
+                            value: offer.price ?? '',
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+            ],
+          );
+        },
+        itemCount: offers.length);
+  }
+
+  Padding offersAssetColumnImages(
+      String? sellingAssetImage, String? buyingAssetImage) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          SvgPicture.network(
+            sellingAssetImage!,
+            color: Colors.grey,
+            height: 20,
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4),
+            child: Icon(Icons.keyboard_arrow_down_rounded),
+          ),
+          SvgPicture.network(
+            buyingAssetImage!,
+            color: Colors.grey,
+            height: 20,
+          ),
+        ],
       ),
     );
   }
