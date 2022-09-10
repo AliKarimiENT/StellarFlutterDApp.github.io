@@ -19,9 +19,18 @@ class KeyGenerationCubit extends Cubit<KeyGenerationState> {
 
     try {
       emit(KeyGenerationLoading());
-      keyPair1 = KeyPair.random();
       // Generate another key pair for account2
-      keyPair2 = KeyPair.random();
+      String? mnemonicWords = prefs.getString('mnemonic');
+      if (mnemonicWords == null) {
+        String mnemonic = await Wallet.generate12WordsMnemonic();
+        mnemonicWords = mnemonic;
+        await prefs.setString('mnemonic', mnemonic);
+      }
+      print(mnemonicWords);
+      Wallet wallet = await Wallet.from(mnemonicWords);
+      keyPair1 = await wallet.getKeyPair(index: 0);
+      keyPair2 = await wallet.getKeyPair(index: 1);
+
       String? encodedKeys = prefs.getString('keys');
       Map<String, dynamic> keys = {};
       if (encodedKeys == null) {
@@ -52,15 +61,12 @@ class KeyGenerationCubit extends Cubit<KeyGenerationState> {
         print(keys.toString());
       }
 
-      String mnemonic = await Wallet.generate12WordsMnemonic();
-      print(mnemonic);
-
       emit(
         KeyGenerationDone(
           GeneratedKey(
             pubkey: keys.keys.toList()[0],
             secretSeed: keys.values.toList()[0],
-            mnemonicWords: mnemonic.split(' '),
+            mnemonicWords: mnemonicWords.split(' '),
           ),
         ),
       );

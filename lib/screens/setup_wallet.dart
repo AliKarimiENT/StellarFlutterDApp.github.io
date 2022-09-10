@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
+import 'package:stellar_flutter_dapp/screens/import_wallet.dart';
 import 'package:stellar_flutter_dapp/screens/secret_recovery.dart';
 
 import '../widgets/custom_appbar.dart';
@@ -14,7 +15,7 @@ class SetupWalletPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(context,false,null),
+      appBar: CustomAppBar(context, false, null),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -59,7 +60,12 @@ class SetupWalletPage extends StatelessWidget {
                   child: SizedBox(
                     width: double.maxFinite,
                     child: RawMaterialButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) =>
+                              ImportWalletPage(keys: mnemonicKeys,accountId: accountId,),
+                        ));
+                      },
                       // hoverColor: Colors.blue,
                       elevation: 0,
                       fillColor: Colors.white,

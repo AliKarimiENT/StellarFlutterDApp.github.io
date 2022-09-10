@@ -81,7 +81,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
               child: CustomScrollView(
                 slivers: [
                   SliverFillRemaining(
-                    hasScrollBody: true,
+                    hasScrollBody: false,
                     child: Form(
                       key: _formKey,
                       child:

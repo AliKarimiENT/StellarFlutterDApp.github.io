@@ -15,6 +15,9 @@ class InfoCubit extends Cubit<BasicInfoState> {
   Future<void> fundAccount(String accountId) async {
     try {
       emit(FundAccountLoading());
+      Wallet x = await Wallet.from(
+          'animal regret quality grit coffee adult utility pair snack prepare buyer decorate');
+      KeyPair keyPair0 = await x.getKeyPair(index: 0);
 
       bool funded = await FriendBot.fundTestAccount(accountId);
 
@@ -42,6 +45,7 @@ class InfoCubit extends Cubit<BasicInfoState> {
   Future<void> getBasicAccountInfo(String accountId) async {
     try {
       emit(AccountInfoLoading());
+     
       AccountResponse account = await sdk.accounts.account(accountId);
       print('Account info loaded');
       print(account.toString());

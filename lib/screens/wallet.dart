@@ -232,6 +232,10 @@ class _WalletPageState extends State<WalletPage>
                 ),
               );
             } else if (state is FundAccountDone) {
+              _infoCubit.setUserProfileImage(
+                  images[keys.keys.toList().indexOf(activeAccountId)],
+                  activeAccountId,
+                  keys[activeAccountId]);
               if (!state.result) {
                 return Center(
                   child: Column(
@@ -267,22 +271,24 @@ class _WalletPageState extends State<WalletPage>
               if (!exist) {
                 for (var token in tokens) {
                   token.trusted = false;
+                  token.balance = 0;
+                  token.limit = 0;
                 }
                 accounts.add(newAccount);
               }
 
-              for (var token in tokens) {
-                for (stl.Balance? balance in state.account.balances!) {
-                  if (balance!.assetType != stl.Asset.TYPE_NATIVE) {
+              for (stl.Balance? balance in state.account.balances!) {
+                if (balance!.assetType != stl.Asset.TYPE_NATIVE) {
+                  for (var token in tokens) {
                     if (token.symbol == balance.assetCode) {
                       token.trusted = true;
                       trustedTokens++;
                       token.limit = double.tryParse(balance.limit!)!.toInt();
                       token.balance = double.parse(balance.balance!).toInt();
                     }
-                  } else {
-                    xlmAmount = balance.balance;
                   }
+                } else {
+                  xlmAmount = balance.balance;
                 }
               }
 

@@ -70,6 +70,7 @@ class _ActivityPageState extends State<ActivityPage> {
         child: CustomScrollView(
           physics: const NeverScrollableScrollPhysics(),
           slivers: [
+            
             SliverFillRemaining(
               hasScrollBody: true,
               child: Column(

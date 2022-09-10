@@ -19,6 +19,7 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       required String amount}) async {
     try {
       emit(TransactionPaymentSending());
+    
       final pref = await SharedPreferences.getInstance();
       String encodedKeys = pref.getString('keys')!;
       Map<String, dynamic> keys = json.decode(encodedKeys);
