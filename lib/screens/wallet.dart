@@ -7,19 +7,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
-import 'package:stellar_flutter_dapp/blocs/account%20basic%20info/basic_info_cubit.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/enum.dart';
 import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
+import '../blocs/info/info_cubit.dart';
 import '../models/token.dart';
 import '../widgets/row_info.dart';
 
 late String activeAccountId;
 late List<Account> accounts = [];
-late BasicInfoCubit _infoCubit;
+late InfoCubit _infoCubit;
 late TransactionCubit _transactionCubit;
 late List<Token> tokens;
 
@@ -51,7 +51,7 @@ class _WalletPageState extends State<WalletPage>
 
     loadFunds();
 
-    _infoCubit = BasicInfoCubit();
+    _infoCubit = InfoCubit();
     _transactionCubit = TransactionCubit();
     loadAccountInfo();
     loadKeys();
@@ -181,7 +181,7 @@ class _WalletPageState extends State<WalletPage>
       ),
       body: BlocProvider(
         create: (context) => _infoCubit,
-        child: BlocConsumer<BasicInfoCubit, BasicInfoState>(
+        child: BlocConsumer<InfoCubit, BasicInfoState>(
           bloc: _infoCubit,
           listener: (context, state) {
             if (state is FundAccountDone) {
@@ -1592,7 +1592,6 @@ class _WalletPageState extends State<WalletPage>
     );
   }
 }
-
 
 class AssetsHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double height;

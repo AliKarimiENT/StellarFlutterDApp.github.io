@@ -32,6 +32,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
   final _formKey = GlobalKey<FormState>();
   bool offerProcessDone = false;
   OfferResponse? _offer;
+  bool isPassive = false;
   @override
   void initState() {
     super.initState();
@@ -113,6 +114,32 @@ class _SellOfferPageState extends State<SellOfferPage> {
                             buyingAssetHeader(),
                             buyingAssetDropDown(),
                             buyingAmountEntry(),
+                            const Divider(height: 1),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 20.0,
+                                  width: 20.0,
+                                  child: Checkbox(
+                                    value: isPassive,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    activeColor: AppTheme.primaryColor,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        isPassive = value!;
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text('Passive Offer'),
+                                )
+                              ],
+                            ),
                             createOfferButton(),
                             if (state is OfferProcessFailed)
                               Padding(
@@ -125,7 +152,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
                                       fontSize: 13,
                                       color: Colors.red),
                                 ),
-                              )
+                              ),
                           ],
                         ),
                       ),
@@ -156,13 +183,16 @@ class _SellOfferPageState extends State<SellOfferPage> {
               if (_formKey.currentState!.validate()) {
                 _cubit.manageOffer(
                   offerId: _offer != null ? _offer!.id : null,
-                  type: _offer == null ? OfferOperationType.create : OfferOperationType.modify,
+                  type: _offer == null
+                      ? OfferOperationType.create
+                      : OfferOperationType.modify,
                   issuerSecretSeed: issuerSecretSeed,
                   sellerSecretSeed: keys[activeAccountId],
                   sellingAssetName: sellingAssetName!,
                   buyingAssetName: buyingAssetName!,
                   amountSelling: sellingAmount,
                   amountBuying: buyingAmount,
+                  passiveOffer: isPassive,
                 );
               }
             },

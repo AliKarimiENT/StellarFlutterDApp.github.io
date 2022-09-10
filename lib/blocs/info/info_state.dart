@@ -1,4 +1,4 @@
-part of 'basic_info_cubit.dart';
+part of 'info_cubit.dart';
 
 abstract class BasicInfoState extends Equatable {
   const BasicInfoState();

@@ -252,6 +252,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         buyingAssetName: buyingAssetName,
                         amountSelling: 0,
                         amountBuying: 1,
+                        passiveOffer: false,
                       );
                     }
                   },

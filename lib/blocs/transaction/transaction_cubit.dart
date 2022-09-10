@@ -246,6 +246,7 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     required int amountSelling, // amount of asset want to sell
     required int amountBuying,
     required String? offerId,
+    required bool passiveOffer,
   }) async {
     try {
       emit(ProcessingOffer(type: type));
@@ -287,20 +288,29 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
             .toString();
       }
       // Create the manage sell offer operation
-      stl.ManageSellOfferOperation ms;
-      if (type == OfferOperationType.create) {
-        ms = stl.ManageSellOfferOperationBuilder(
-                sellingAsset, buyingAsset, amountSelling.toString(), price)
-            .build();
+      late stl.ManageSellOfferOperation ms;
+      late stl.Transaction transaction;
+      if (!passiveOffer) {
+        if (type == OfferOperationType.create) {
+          ms = stl.ManageSellOfferOperationBuilder(
+                  sellingAsset, buyingAsset, amountSelling.toString(), price)
+              .build();
+        } else {
+          ms = stl.ManageSellOfferOperationBuilder(
+                  sellingAsset, buyingAsset, amountSelling.toString(), price)
+              .setOfferId(offerId!)
+              .build();
+        }
+        transaction = stl.TransactionBuilder(selller).addOperation(ms).build();
       } else {
-        ms = stl.ManageSellOfferOperationBuilder(
-                sellingAsset, buyingAsset, amountSelling.toString(), price)
-            .setOfferId(offerId!)
-            .build();
+        stl.CreatePassiveSellOfferOperation cspo =
+            stl.CreatePassiveSellOfferOperationBuilder(
+                    sellingAsset, buyingAsset, amountSelling.toString(), price)
+                .build();
+        transaction =
+            stl.TransactionBuilder(selller).addOperation(cspo).build();
       }
 
-      stl.Transaction transaction =
-          stl.TransactionBuilder(selller).addOperation(ms).build();
       // Sign
       transaction.sign(sellerKeyPair, stl.Network.TESTNET);
       stl.SubmitTransactionResponse response =
@@ -326,9 +336,11 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
   Future<void> getOffers({required String accountId}) async {
     try {
       emit(LoadingOffers());
-      stl.Page<stl.OfferResponse> offers =
-          await sdk.offers.forAccount(accountId).execute();
-      emit(LoadedOffers(records: offers.records!));
+      stl.Page<stl.OfferResponse> offers = await sdk.offers
+          .forAccount(accountId)
+          .order(stl.RequestBuilderOrder.DESC)
+          .execute();
+      emit(LoadedOffers(records: offers.records!.toList()));
     } catch (e) {
       emit(LoadingOffersFailed(message: e.toString()));
     }

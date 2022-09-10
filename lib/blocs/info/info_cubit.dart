@@ -7,15 +7,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
-part 'basic_info_state.dart';
+part 'info_state.dart';
 
-class BasicInfoCubit extends Cubit<BasicInfoState> {
-  BasicInfoCubit() : super(BasicInfoInitial());
+class InfoCubit extends Cubit<BasicInfoState> {
+  InfoCubit() : super(BasicInfoInitial());
 
   Future<void> fundAccount(String accountId) async {
     try {
       emit(FundAccountLoading());
-    
+
       bool funded = await FriendBot.fundTestAccount(accountId);
 
       final pref = await SharedPreferences.getInstance();
