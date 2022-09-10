@@ -7,13 +7,16 @@ import 'package:stellar_flutter_dapp/enum.dart';
 import 'package:stellar_flutter_dapp/models/token.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
 import 'package:stellar_flutter_dapp/widgets/custom_appbar.dart';
+import 'package:stellar_flutter_sdk/src/responses/offer_response.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../enum.dart';
 
 class SellOfferPage extends StatefulWidget {
-  const SellOfferPage({Key? key, required this.transactionCubit})
+  SellOfferPage({Key? key, required this.transactionCubit, required this.offer})
       : super(key: key);
   final TransactionCubit transactionCubit;
+  late OfferResponse? offer;
   @override
   State<SellOfferPage> createState() => _SellOfferPageState();
 }
@@ -21,12 +24,14 @@ class SellOfferPage extends StatefulWidget {
 class _SellOfferPageState extends State<SellOfferPage> {
   late TransactionCubit _cubit;
   late List<String> items = []; // list of trusted tokens
-  String? sellingAsset;
-  String? buyingAsset;
+  String? sellingAssetName;
+  String? buyingAssetName;
   int sellingAmount = 0;
   int buyingAmount = 0;
   Token? sellingToken, buyingToken;
   final _formKey = GlobalKey<FormState>();
+  bool offerProcessDone = false;
+  OfferResponse? _offer;
   @override
   void initState() {
     super.initState();
@@ -38,71 +43,96 @@ class _SellOfferPageState extends State<SellOfferPage> {
         items.add(token.symbol);
       }
     }
+    _offer = widget.offer;
+    if (widget.offer != null) {
+      var sellingAsset = _offer!.selling as stl.AssetTypeCreditAlphaNum;
+      var buyingAsset = _offer!.buying as stl.AssetTypeCreditAlphaNum;
+
+      sellingAssetName = sellingAsset.mCode;
+      buyingAssetName = buyingAsset.mCode;
+      sellingAmount = double.tryParse(_offer!.amount!)!.toInt();
+      buyingAmount = (double.tryParse(_offer!.price!)! * sellingAmount).toInt();
+
+      if (sellingAssetName != 'XLM') {
+        setToken(name: sellingAssetName!, type: AssetOfferType.selling);
+      }
+      if (buyingAssetName != 'XLM') {
+        setToken(name: buyingAssetName!, type: AssetOfferType.buying);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar(context, true),
-      body: BlocProvider(
-        create: (context) => _cubit,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: CustomScrollView(
-              slivers: [
-                SliverFillRemaining(
-                  hasScrollBody: true,
-                  child: Form(
-                    key: _formKey,
-                    child: BlocBuilder<TransactionCubit, TransactionCubitState>(
-                      bloc: _cubit,
-                      builder: (context, state) => Column(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Text(
-                                'Manage Sell Offer',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16,
-                                  color: Colors.black.withOpacity(0.80),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.of(context).pop(offerProcessDone);
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: CustomAppBar(context, true, offerProcessDone),
+        body: BlocProvider(
+          create: (context) => _cubit,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: CustomScrollView(
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: true,
+                    child: Form(
+                      key: _formKey,
+                      child:
+                          BlocBuilder<TransactionCubit, TransactionCubitState>(
+                        bloc: _cubit,
+                        builder: (context, state) => Column(
+                          // mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                child: Text(
+                                  'Manage Offer',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                    color: Colors.black.withOpacity(0.80),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          sellingAssetHeader(),
-                          sellingAssetDropDown(),
-                          sellingAmountEntry(),
-                          const Divider(height: 1),
-                          const SizedBox(height: 16),
-                          buyingAssetHeader(),
-                          buyingAssetDropDown(),
-                          buyingAmountEntry(),
-                          createOfferButton(),
-                          if (state is CreatingOfferFailed)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  bottom: 16, left: 8, right: 8),
-                              child: Text(
-                                'An Error Accord\n ${state.message.toString()}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                    color: Colors.red),
-                              ),
-                            )
-                        ],
+                            sellingAssetHeader(),
+                            sellingAssetDropDown(),
+                            sellingAmountEntry(),
+                            const Divider(height: 1),
+                            const SizedBox(height: 16),
+                            buyingAssetHeader(),
+                            buyingAssetDropDown(),
+                            buyingAmountEntry(),
+                            createOfferButton(),
+                            if (state is OfferProcessFailed)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: 16, left: 8, right: 8),
+                                child: Text(
+                                  'An Error Accord\n ${state.message.toString()}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: Colors.red),
+                                ),
+                              )
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -124,26 +154,38 @@ class _SellOfferPageState extends State<SellOfferPage> {
             fillColor: AppTheme.primaryColor,
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                _cubit.createSellOffer(
-                    issuerSecretSeed: issuerSecretSeed,
-                    sellerSecretSeed: keys[activeAccountId],
-                    sellingAssetName: sellingAsset!,
-                    buyingAssetName: buyingAsset!,
-                    amountSelling: sellingAmount,
-                    amountBuying: buyingAmount);
+                _cubit.manageOffer(
+                  offerId: _offer != null ? _offer!.id : null,
+                  type: _offer == null ? OfferOperationType.create : OfferOperationType.modify,
+                  issuerSecretSeed: issuerSecretSeed,
+                  sellerSecretSeed: keys[activeAccountId],
+                  sellingAssetName: sellingAssetName!,
+                  buyingAssetName: buyingAssetName!,
+                  amountSelling: sellingAmount,
+                  amountBuying: buyingAmount,
+                );
               }
             },
             child: Padding(
                 padding: EdgeInsets.all(0),
-                child: BlocBuilder<TransactionCubit, TransactionCubitState>(
+                child: BlocConsumer<TransactionCubit, TransactionCubitState>(
                     bloc: _cubit,
+                    listener: (context, state) {
+                      if (state is OfferProcessDone) {
+                        setState(() {
+                          offerProcessDone = true;
+                        });
+                      }
+                    },
                     builder: (context, state) {
-                      if (state is CreatingOffer) {
+                      if (state is ProcessingOffer) {
                         return Row(
                           children: [
-                            const Text(
-                              'Creating',
-                              style: TextStyle(
+                            Text(
+                              state.type == OfferOperationType.create
+                                  ? 'Creating'
+                                  : 'Modifying',
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
                                   color: Colors.white),
@@ -160,12 +202,14 @@ class _SellOfferPageState extends State<SellOfferPage> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           mainAxisAlignment: MainAxisAlignment.center,
                         );
-                      } else if (state is CreatedOffer) {
+                      } else if (state is OfferProcessDone) {
                         return Row(
                           children: [
-                            const Text(
-                              'Sell offer created',
-                              style: TextStyle(
+                            Text(
+                              state.type == OfferOperationType.create
+                                  ? 'Offer created'
+                                  : 'Offer modified',
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
                                   color: Colors.white),
@@ -185,9 +229,9 @@ class _SellOfferPageState extends State<SellOfferPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                         );
                       }
-                      return const Text(
-                        'Create',
-                        style: TextStyle(
+                      return Text(
+                        _offer == null ? 'Create' : 'Modify',
+                        style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.w500),
@@ -223,14 +267,14 @@ class _SellOfferPageState extends State<SellOfferPage> {
         cursorHeight: 16,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: (value) {
-          if (buyingAsset == null) {
+          if (buyingAssetName == null) {
             return 'You need to select buying asset ';
           } else {
             if (value != "") {
-              if (buyingAsset == sellingAsset) {
+              if (buyingAssetName == sellingAssetName) {
                 return "Selling and buying assets should be different";
               } else {
-                if (buyingAsset != 'XLM') {
+                if (buyingAssetName != 'XLM') {
                   if (double.parse(value!) > buyingToken!.limit) {
                     return "You can't buy asset more than trusted amount";
                   }
@@ -251,6 +295,8 @@ class _SellOfferPageState extends State<SellOfferPage> {
               borderRadius: BorderRadius.circular(8)),
           labelText: 'Buying amount',
         ),
+        controller: TextEditingController(
+            text: buyingAmount != 0 ? buyingAmount.toString() : null),
         // decoration: const InputDecoration(
         //     fillColor: Colors.white,
         //     focusColor: Colors.white,
@@ -287,13 +333,13 @@ class _SellOfferPageState extends State<SellOfferPage> {
             .toList(),
         onChanged: (value) {
           setState(() {
-            buyingAsset = value;
-            if (buyingAsset != 'XLM') {
+            buyingAssetName = value;
+            if (buyingAssetName != 'XLM') {
               setToken(name: value!, type: AssetOfferType.buying);
             }
           });
         },
-        value: buyingAsset,
+        value: buyingAssetName,
         hint: Text('Select Buying Asset'),
       ),
     );
@@ -320,14 +366,14 @@ class _SellOfferPageState extends State<SellOfferPage> {
         maxLines: 1,
         cursorHeight: 16, autovalidateMode: AutovalidateMode.onUserInteraction,
         validator: (value) {
-          if (sellingAsset == null) {
+          if (sellingAssetName == null) {
             return 'You need to select selling asset ';
           } else {
             if (value != "") {
-              if (buyingAsset == sellingAsset) {
+              if (buyingAssetName == sellingAssetName) {
                 return "Selling and buying assets should be different";
               } else {
-                if (sellingAsset == "XLM") {
+                if (sellingAssetName == "XLM") {
                   if (double.parse(value!) > double.parse(xlmAmount!)) {
                     return "You can't sell XLM more than your balance";
                   }
@@ -344,6 +390,8 @@ class _SellOfferPageState extends State<SellOfferPage> {
             }
           }
         },
+        controller: TextEditingController(
+            text: sellingAmount != 0 ? sellingAmount.toString() : null),
         autofocus: false,
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -388,13 +436,13 @@ class _SellOfferPageState extends State<SellOfferPage> {
             .toList(),
         onChanged: (value) {
           setState(() {
-            sellingAsset = value;
-            if (sellingAsset != 'XLM') {
+            sellingAssetName = value;
+            if (sellingAssetName != 'XLM') {
               setToken(name: value!, type: AssetOfferType.selling);
             }
           });
         },
-        value: sellingAsset,
+        value: sellingAssetName,
         hint: Text('Select Selling Asset'),
       ),
     );

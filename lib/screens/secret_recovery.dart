@@ -18,14 +18,14 @@ class _SecretRecoveryPageState extends State<SecretRecoveryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(context, false),
+      appBar: CustomAppBar(context, false,null),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height -
-                  CustomAppBar(context, false).preferredSize.height -
+                  CustomAppBar(context, false,null).preferredSize.height -
                   MediaQuery.of(context).padding.top,
             ),
             child: Column(

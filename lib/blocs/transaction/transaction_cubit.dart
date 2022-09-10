@@ -237,16 +237,18 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     }
   }
 
-  Future<void> createSellOffer({
+  Future<void> manageOffer({
+    required OfferOperationType type,
     required String issuerSecretSeed,
     required String sellerSecretSeed,
     required String sellingAssetName,
     required String buyingAssetName,
     required int amountSelling, // amount of asset want to sell
     required int amountBuying,
+    required String? offerId,
   }) async {
     try {
-      emit(CreatingOffer(type: OfferType.sell));
+      emit(ProcessingOffer(type: type));
       // seller key pair
       stl.KeyPair sellerKeyPair = stl.KeyPair.fromSecretSeed(sellerSecretSeed);
       String sellerAccountId = sellerKeyPair.accountId;
@@ -276,13 +278,27 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
 
       // Create the offer
       // Price of 1 unit of selling in terms of buying
-      var price = (double.tryParse(amountBuying.toString())! /
-              double.tryParse(amountSelling.toString())!)
-          .toString();
+      var price;
+      if (amountSelling == 0) {
+        price = '1';
+      } else {
+        price = (double.tryParse(amountBuying.toString())! /
+                double.tryParse(amountSelling.toString())!)
+            .toString();
+      }
       // Create the manage sell offer operation
-      stl.ManageSellOfferOperation ms = stl.ManageSellOfferOperationBuilder(
-              sellingAsset, buyingAsset, amountSelling.toString(), price)
-          .build();
+      stl.ManageSellOfferOperation ms;
+      if (type == OfferOperationType.create) {
+        ms = stl.ManageSellOfferOperationBuilder(
+                sellingAsset, buyingAsset, amountSelling.toString(), price)
+            .build();
+      } else {
+        ms = stl.ManageSellOfferOperationBuilder(
+                sellingAsset, buyingAsset, amountSelling.toString(), price)
+            .setOfferId(offerId!)
+            .build();
+      }
+
       stl.Transaction transaction =
           stl.TransactionBuilder(selller).addOperation(ms).build();
       // Sign
@@ -298,12 +314,12 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
             in response.extras!.resultCodes!.operationsResultCodes!.toList()) {
           failureMessage += '$error';
         }
-        emit(CreatingOfferFailed(message: failureMessage));
+        emit(OfferProcessFailed(message: failureMessage));
       } else {
-        emit(CreatedOffer(type: OfferType.buy));
+        emit(OfferProcessDone(type: type));
       }
     } catch (e) {
-      emit(CreatingOfferFailed(message: e.toString()));
+      emit(OfferProcessFailed(message: e.toString()));
     }
   }
 

@@ -8,6 +8,6 @@ enum ChangeTrustType {
   delete,
 }
 
-enum AssetOfferType {
-  buying , selling
-}
+enum AssetOfferType { buying, selling }
+
+enum OfferOperationType { create, modify, delete }

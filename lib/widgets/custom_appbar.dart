@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-AppBar CustomAppBar(BuildContext context,bool hasLeading) {
+AppBar CustomAppBar(BuildContext context,bool hasLeading,bool? returnValue) {
   return AppBar(
     centerTitle: true,
     automaticallyImplyLeading: hasLeading,
@@ -11,7 +11,7 @@ AppBar CustomAppBar(BuildContext context,bool hasLeading) {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
+          SizedBox(
             width: 24,
             height: 24,
             child: SvgPicture.asset(
@@ -35,7 +35,7 @@ AppBar CustomAppBar(BuildContext context,bool hasLeading) {
       splashRadius: 32,
       iconSize: 36,
       onPressed: () {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(returnValue);
       },
     ):null,
   );

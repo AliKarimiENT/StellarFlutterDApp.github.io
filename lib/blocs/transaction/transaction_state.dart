@@ -79,18 +79,18 @@ class TrustingTokenFailed extends TransactionCubitState {
   List<Object?> get props => [message];
 }
 
-class CreatingOffer extends TransactionCubitState {
-  OfferType type;
-  CreatingOffer({
+class ProcessingOffer extends TransactionCubitState {
+  OfferOperationType type;
+  ProcessingOffer({
     required this.type,
   });
   @override
   List<Object?> get props => [];
 }
 
-class CreatedOffer extends TransactionCubitState {
-  OfferType type;
-  CreatedOffer({
+class OfferProcessDone extends TransactionCubitState {
+  OfferOperationType type;
+  OfferProcessDone({
     required this.type,
   });
 
@@ -98,10 +98,10 @@ class CreatedOffer extends TransactionCubitState {
   List<Object?> get props => [];
 }
 
-class CreatingOfferFailed extends TransactionCubitState {
+class OfferProcessFailed extends TransactionCubitState {
   String message;
 
-  CreatingOfferFailed({
+  OfferProcessFailed({
     required this.message,
   });
 

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
+import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/enum.dart';
 import 'package:stellar_flutter_dapp/screens/sell_offer.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
@@ -28,7 +29,7 @@ class _ActivityPageState extends State<ActivityPage> {
   late List<String> categories = ['Offers', 'Transactions', 'Operations'];
   late int selectedIndex = 0;
   late List<stl.OfferResponse> offers = [];
-
+  late String deletedOfferId;
   @override
   void initState() {
     super.initState();
@@ -40,7 +41,7 @@ class _ActivityPageState extends State<ActivityPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(context, false),
+      appBar: CustomAppBar(context, false, null),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 56),
         child: ExpandableFab(
@@ -48,8 +49,8 @@ class _ActivityPageState extends State<ActivityPage> {
           type: ExpandableFabType.up,
           child: const Icon(Icons.add),
           closeButtonStyle: const ExpandableFabCloseButtonStyle(
-              backgroundColor: AppTheme.primaryColor),
-          backgroundColor: AppTheme.primaryColor,
+              backgroundColor: AppTheme.green),
+          backgroundColor: AppTheme.green,
           distance: 56,
           overlayStyle: ExpandableFabOverlayStyle(
             // color: Colors.black.withOpacity(0.5),
@@ -57,13 +58,9 @@ class _ActivityPageState extends State<ActivityPage> {
           ),
           children: <FABData>[
             FABData(
-                title: 'Sell Offer',
+                title: 'Add Offer',
                 icon: Icons.sell_rounded,
                 type: OfferType.sell),
-            FABData(
-                title: 'Buy Offer',
-                icon: Icons.credit_card,
-                type: OfferType.buy),
           ].map<Widget>(buildItem).toList(),
         ),
       ),
@@ -86,6 +83,23 @@ class _ActivityPageState extends State<ActivityPage> {
                           setState(() {
                             offers = state.records;
                           });
+                        }
+                        if (state is OfferProcessDone) {
+                          if (state.type == OfferOperationType.delete) {
+                            _transactionCubit.getOffers(
+                                accountId: activeAccountId);
+                            deleteBtnTapped = false;
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                "The offer with id : ($deletedOfferId) is deleted"),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            behavior: SnackBarBehavior.floating,
+                            margin: const EdgeInsets.all(16),
+                            backgroundColor: AppTheme.primaryColor,
+                            duration: const Duration(milliseconds: 3500),
+                          ));
                         }
                       },
                       builder: (context, state) {
@@ -157,7 +171,9 @@ class _ActivityPageState extends State<ActivityPage> {
     );
   }
 
-  ListView offersList() {
+  bool deleteBtnTapped = false;
+
+  Widget offersList() {
     return ListView.builder(
         scrollDirection: Axis.vertical,
         itemBuilder: (context, index) {
@@ -196,8 +212,57 @@ class _ActivityPageState extends State<ActivityPage> {
               }
             }
           }
-          return Column(
+          return Stack(
             children: [
+              Positioned(
+                child: IconButton(
+                  iconSize: 20,
+                  color: Colors.grey,
+                  onPressed: () async {
+                    await Navigator.of(context)
+                        .push(MaterialPageRoute(
+                      builder: (context) => SellOfferPage(
+                          transactionCubit: _transactionCubit, offer: offer),
+                    ))
+                        .then((value) {
+                      if (value) {
+                        _transactionCubit.getOffers(accountId: activeAccountId);
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.mode_edit_rounded),
+                ),
+                top: 8,
+                left: 4,
+              ),
+              Positioned(
+                child: IconButton(
+                  iconSize: 20,
+                  color: Colors.grey,
+                  onPressed: () {
+                    if (!deleteBtnTapped) {
+                      deleteBtnTapped = true;
+                      deletedOfferId = offer.id!;
+                      _transactionCubit.manageOffer(
+                        offerId: offer.id,
+                        type: OfferOperationType.delete,
+                        issuerSecretSeed: issuerSecretSeed,
+                        sellerSecretSeed: keys[activeAccountId],
+                        sellingAssetName: sellingAssetName,
+                        buyingAssetName: buyingAssetName,
+                        amountSelling: 0,
+                        amountBuying: 1,
+                      );
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: AppTheme.red,
+                  ),
+                ),
+                bottom: 0,
+                left: 4,
+              ),
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 16),
                 // height: 50,
@@ -209,6 +274,14 @@ class _ActivityPageState extends State<ActivityPage> {
                     Expanded(
                       child: Column(
                         children: [
+                          RowInfoItem(
+                            title: 'Offer id',
+                            value: offer.id!,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
                           RowInfoItem(
                             title: 'Seller',
                             value: offer.seller!.accountId,
@@ -226,16 +299,16 @@ class _ActivityPageState extends State<ActivityPage> {
                             child: Divider(),
                           ),
                           RowInfoItem(
-                            title: 'Buying',
-                            value: buyingAssetName,
+                            title: 'Amount',
+                            value: offer.amount ?? '',
                           ),
                           const Padding(
                             padding: EdgeInsets.only(left: 36),
                             child: Divider(),
                           ),
                           RowInfoItem(
-                            title: 'Amount',
-                            value: offer.amount ?? '',
+                            title: 'Buying',
+                            value: buyingAssetName,
                           ),
                           const Padding(
                             padding: EdgeInsets.only(left: 36),
@@ -346,24 +419,23 @@ class _ActivityPageState extends State<ActivityPage> {
           data.title,
           style: const TextStyle(fontSize: 16, color: Colors.white),
         ),
-        onPressed: () {
+        onPressed: () async {
           final state = _key.currentState;
           if (state != null) {
             state.toggle();
           }
-          if (data.type == OfferType.sell) {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) =>
-                  SellOfferPage(transactionCubit: _transactionCubit),
-            ));
-            // _transactionCubit.createSellOffer(
-            //     issuerSecretSeed: issuerSecretSeed,
-            //     sellerSecretSeed: keys[accounts[0].accountId],
-            //     sellingAssetName: 'DIGI',
-            //     buyingAssetName: 'ETH',
-            //     amountSelling: 10,
-            //     amountBuying: 10);
-          }
+          await Navigator.of(context)
+              .push(MaterialPageRoute(
+            builder: (context) => SellOfferPage(
+              transactionCubit: _transactionCubit,
+              offer: null,
+            ),
+          ))
+              .then((value) {
+            if (value == true) {
+              _transactionCubit.getOffers(accountId: activeAccountId);
+            }
+          });
         },
       );
 }

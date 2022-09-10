@@ -1111,7 +1111,7 @@ class _WalletPageState extends State<WalletPage>
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.green,
+                  color: AppTheme.green,
                 ),
               ),
               Text(

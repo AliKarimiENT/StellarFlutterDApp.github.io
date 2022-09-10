@@ -28,7 +28,7 @@ class _OnboardingState extends State<Onboarding> {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
-      appBar: CustomAppBar(context,false),
+      appBar: CustomAppBar(context,false,null),
       body: BlocProvider(
         create: (context) => _keyGenerationCubit,
         child: Column(
