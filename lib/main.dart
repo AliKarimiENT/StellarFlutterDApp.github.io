@@ -35,8 +35,7 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Onboarding(),
-      // home: keyGenerated ? HomePage(accountId) : Onboarding(),
+      home: keyGenerated ? HomePage(accountId) : Onboarding(),
     );
   }
 
