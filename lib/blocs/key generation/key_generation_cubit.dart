@@ -5,6 +5,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_dapp/models/generated_key.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
@@ -15,27 +16,26 @@ class KeyGenerationCubit extends Cubit<KeyGenerationState> {
   late KeyPair keyPair1;
   late KeyPair keyPair2;
   Future<void> generateKeys() async {
-    final prefs = await SharedPreferences.getInstance();
 
     try {
       emit(KeyGenerationLoading());
       // Generate another key pair for account2
-      String? mnemonicWords = prefs.getString('mnemonic');
+      String? mnemonicWords = pref.getString('mnemonic');
       if (mnemonicWords == null) {
         String mnemonic = await Wallet.generate12WordsMnemonic();
         mnemonicWords = mnemonic;
-        await prefs.setString('mnemonic', mnemonic);
+        await pref.setString('mnemonic', mnemonic);
       }
       print(mnemonicWords);
       Wallet wallet = await Wallet.from(mnemonicWords);
       keyPair1 = await wallet.getKeyPair(index: 0);
       keyPair2 = await wallet.getKeyPair(index: 1);
 
-      String? encodedKeys = prefs.getString('keys');
+      String? encodedKeys = pref.getString('keys');
       Map<String, dynamic> keys = {};
       if (encodedKeys == null) {
-        await prefs.setString('accountId', keyPair1.accountId);
-        await prefs.setBool('funded', false);
+        await pref.setString('accountId', keyPair1.accountId);
+        await pref.setBool('funded', false);
 
         keys = {
           keyPair1.accountId: keyPair1.secretSeed,
@@ -45,14 +45,14 @@ class KeyGenerationCubit extends Cubit<KeyGenerationState> {
         String encodedKeys = json.encode(keys);
         print(encodedKeys);
 
-        prefs.setString('keys', encodedKeys);
+        pref.setString('keys', encodedKeys);
 
         Map<String, dynamic> funds = {
           keyPair1.accountId: false,
           keyPair2.accountId: false
         };
         String encodedFunds = json.encode(funds);
-        prefs.setString('funds', encodedFunds);
+        pref.setString('funds', encodedFunds);
 
         // generate mnemonic words
 

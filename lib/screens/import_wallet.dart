@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../app_theme.dart';
+import '../main.dart';
 import '../widgets/custom_appbar.dart';
 import 'home.dart';
 
@@ -32,8 +33,9 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar(context, false, null),
+backgroundColor: themeProvider.isDarkMode
+          ? AppTheme.darkBackgroundColor
+          : Colors.white,      appBar: CustomAppBar(context, false, null),
       body: ConstrainedBox(
         constraints: BoxConstraints(
             minHeight: MediaQuery.of(context).size.height -

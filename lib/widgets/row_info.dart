@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 
 class RowInfoItem extends StatelessWidget {
   const RowInfoItem({
@@ -21,7 +22,9 @@ class RowInfoItem extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 12,
-              color: Colors.black.withOpacity(0.80),
+              color: themeProvider.isDarkMode
+                  ? Colors.white.withOpacity(0.8)
+                  : Colors.black.withOpacity(0.80),
             ),
           ),
           Flexible(
@@ -31,9 +34,12 @@ class RowInfoItem extends StatelessWidget {
               softWrap: true,
               overflow: TextOverflow.fade,
               style: TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 12,
-                  color: Colors.black.withOpacity(0.80)),
+                fontWeight: FontWeight.normal,
+                fontSize: 12,
+                color: themeProvider.isDarkMode
+                    ? Colors.white.withOpacity(0.8)
+                    : Colors.black.withOpacity(0.80),
+              ),
             ),
           ),
         ],

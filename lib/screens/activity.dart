@@ -40,7 +40,7 @@ class _ActivityPageState extends State<ActivityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white,
       appBar: CustomAppBar(context, false, null),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 56),
@@ -70,7 +70,6 @@ class _ActivityPageState extends State<ActivityPage> {
         child: CustomScrollView(
           physics: const NeverScrollableScrollPhysics(),
           slivers: [
-            
             SliverFillRemaining(
               hasScrollBody: true,
               child: Column(
@@ -120,7 +119,6 @@ class _ActivityPageState extends State<ActivityPage> {
                               ),
                               const Text(
                                 'Loading Offers',
-                                style: TextStyle(color: Colors.black),
                               ),
                             ],
                           ));
@@ -147,8 +145,9 @@ class _ActivityPageState extends State<ActivityPage> {
                         }
                         if (offers.isEmpty) {
                           return Container(
-                            child: const Text('No offer found',
-                                style: TextStyle(color: Colors.black)),
+                            child: const Text(
+                              'No offer found',
+                            ),
                             alignment: Alignment.center,
                           );
                         } else {
@@ -395,9 +394,10 @@ class _ActivityPageState extends State<ActivityPage> {
               child: Text(
                 categories[index],
                 style: TextStyle(
-                    color: selectedIndex == index
-                        ? Colors.white
-                        : Colors.grey.shade700),
+                  color: selectedIndex == index
+                      ? Colors.white
+                      : Colors.grey.shade700,
+                ),
               ),
             ),
           );

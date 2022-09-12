@@ -5,6 +5,7 @@ import 'package:stellar_flutter_dapp/blocs/key%20generation/key_generation_cubit
 import 'package:stellar_flutter_dapp/screens/setup_wallet.dart';
 
 import '../app_theme.dart';
+import '../main.dart';
 import '../widgets/custom_appbar.dart';
 
 class Onboarding extends StatefulWidget {
@@ -26,9 +27,11 @@ class _OnboardingState extends State<Onboarding> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: themeProvider.isDarkMode
+          ? AppTheme.darkBackgroundColor
+          : Colors.white,
       resizeToAvoidBottomInset: false,
-      appBar: CustomAppBar(context,false,null),
+      appBar: CustomAppBar(context, false, null),
       body: BlocProvider(
         create: (context) => _keyGenerationCubit,
         child: Column(
@@ -47,10 +50,7 @@ class _OnboardingState extends State<Onboarding> {
                   ),
                   const Text(
                     'Welcome to Stellar DApp',
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -61,7 +61,10 @@ class _OnboardingState extends State<Onboarding> {
                 width: double.maxFinite,
                 child: RawMaterialButton(
                   shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8))),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(8),
+                    ),
+                  ),
                   fillColor: AppTheme.primaryColor,
                   onPressed: () {
                     _keyGenerationCubit.generateKeys();

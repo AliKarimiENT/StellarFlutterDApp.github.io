@@ -5,6 +5,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 part 'info_state.dart';
@@ -21,7 +22,6 @@ class InfoCubit extends Cubit<BasicInfoState> {
 
       bool funded = await FriendBot.fundTestAccount(accountId);
 
-      final pref = await SharedPreferences.getInstance();
       String encodedFunds = pref.getString('funds')!;
       print('--$encodedFunds');
       Map<String, dynamic> funds = json.decode(encodedFunds);
@@ -45,7 +45,7 @@ class InfoCubit extends Cubit<BasicInfoState> {
   Future<void> getBasicAccountInfo(String accountId) async {
     try {
       emit(AccountInfoLoading());
-     
+
       AccountResponse account = await sdk.accounts.account(accountId);
       print('Account info loaded');
       print(account.toString());

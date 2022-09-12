@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/enum.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_dapp/models/account.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
@@ -48,6 +48,7 @@ class _WalletPageState extends State<WalletPage>
   void initState() {
     super.initState();
     controller = TabController(length: 2, vsync: this);
+    activeAccountId = widget.accountId;
 
     loadFunds();
 
@@ -55,7 +56,6 @@ class _WalletPageState extends State<WalletPage>
     _transactionCubit = TransactionCubit();
     loadAccountInfo();
     loadKeys();
-    activeAccountId = widget.accountId;
 
     tokens = [
       Token(
@@ -110,14 +110,12 @@ class _WalletPageState extends State<WalletPage>
   }
 
   Future<void> loadFunds() async {
-    final pref = await SharedPreferences.getInstance();
     String encodedFunds = pref.getString('funds')!;
     funds = json.decode(encodedFunds);
     //      var secretSeed = keys[senderId];
   }
 
   Future<void> loadKeys() async {
-    final pref = await SharedPreferences.getInstance();
     String encodedKeys = pref.getString('keys')!;
     keys = json.decode(encodedKeys);
     accountId2 = keys.keys.toList()[1];
@@ -131,7 +129,6 @@ class _WalletPageState extends State<WalletPage>
   }
 
   Future<void> loadAccountInfo() async {
-    final pref = await SharedPreferences.getInstance();
 
     var funded = funds[activeAccountId];
     if (funded == false) {
@@ -145,9 +142,12 @@ class _WalletPageState extends State<WalletPage>
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
+        backgroundColor: themeProvider.isDarkMode
+            ? AppTheme.darkBackgroundColor
+            : Colors.white,
         automaticallyImplyLeading: false,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -158,20 +158,23 @@ class _WalletPageState extends State<WalletPage>
               height: 24,
               child: SvgPicture.asset(
                 'assets/stellarLogo.svg',
+                color: themeProvider.isDarkMode ? Colors.white : Colors.black,
               ),
             ),
-            const Text(
+            Text(
               'Stellar Wallet',
-              style: TextStyle(color: Colors.black),
+              style: TextStyle(
+                color: themeProvider.isDarkMode ? Colors.white : Colors.black,
+              ),
             ),
           ],
         ),
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
         shadowColor: Colors.white,
         elevation: 0,
-        leading: const Icon(
+        leading: Icon(
           Icons.menu_rounded,
-          color: Colors.black,
+          color: themeProvider.isDarkMode ? Colors.white : Colors.black,
         ),
         actions: [
           Container(
@@ -208,7 +211,6 @@ class _WalletPageState extends State<WalletPage>
                     ),
                     const Text(
                       'Funding your account on Stellar TestNet',
-                      style: TextStyle(color: Colors.black),
                     ),
                   ],
                 ),
@@ -323,7 +325,10 @@ class _WalletPageState extends State<WalletPage>
                                       Row(
                                         children: [
                                           SvgPicture.network(token.image,
-                                              color: Colors.grey, height: 36),
+                                              color: themeProvider.isDarkMode
+                                                  ? Colors.white60
+                                                  : Colors.grey,
+                                              height: 36),
                                           Expanded(
                                             child: Padding(
                                               padding:
@@ -346,8 +351,14 @@ class _WalletPageState extends State<WalletPage>
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         fontSize: 16,
-                                                        color: Colors.black
-                                                            .withOpacity(0.80),
+                                                        color: themeProvider
+                                                                .isDarkMode
+                                                            ? Colors.white
+                                                                .withOpacity(
+                                                                    0.8)
+                                                            : Colors.black
+                                                                .withOpacity(
+                                                                    0.80),
                                                       ),
                                                     ),
                                                   ),
@@ -413,142 +424,8 @@ class _WalletPageState extends State<WalletPage>
                                                     onPressed: () {
                                                       _transactionCubit.emit(
                                                           TransactionCubitInitial());
-                                                      showDialog(
-                                                        context: context,
-                                                        barrierColor:
-                                                            Colors.black38,
-                                                        barrierDismissible:
-                                                            true,
-                                                        builder: (context) {
-                                                          return BackdropFilter(
-                                                            filter: ImageFilter
-                                                                .blur(
-                                                                    sigmaX: 5,
-                                                                    sigmaY: 5),
-                                                            child: Dialog(
-                                                              shape:
-                                                                  RoundedRectangleBorder(
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              16),
-                                                                      side:
-                                                                          const BorderSide(
-                                                                        color: AppTheme
-                                                                            .primaryColor,
-                                                                        width:
-                                                                            1,
-                                                                      )),
-                                                              elevation: 0,
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                            .only(
-                                                                        left:
-                                                                            24,
-                                                                        top: 16,
-                                                                        right:
-                                                                            24,
-                                                                        bottom:
-                                                                            8),
-                                                                child: Wrap(
-                                                                  children: [
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .spaceBetween,
-                                                                      children: [
-                                                                        Text(
-                                                                          token
-                                                                              .symbol,
-                                                                          style: const TextStyle(
-                                                                              fontSize: 20,
-                                                                              fontWeight: FontWeight.w500,
-                                                                              color: AppTheme.primaryColor),
-                                                                        ),
-                                                                        RawMaterialButton(
-                                                                          onPressed:
-                                                                              () {
-                                                                            _transactionCubit.initTrust();
-                                                                            showTrustBottomSheet(context,
-                                                                                token);
-                                                                          },
-                                                                          elevation:
-                                                                              0,
-                                                                          hoverElevation:
-                                                                              0,
-                                                                          highlightElevation:
-                                                                              0,
-                                                                          fillColor:
-                                                                              Colors.white,
-                                                                          shape: const RoundedRectangleBorder(
-                                                                              borderRadius: BorderRadius.all(Radius.circular(8)),
-                                                                              side: BorderSide(color: AppTheme.primaryColor, width: 2)),
-                                                                          child:
-                                                                              const Padding(
-                                                                            padding:
-                                                                                EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                                                                            child:
-                                                                                Text('Change Trust', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.black)),
-                                                                          ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                    const Padding(
-                                                                      padding: EdgeInsets.symmetric(
-                                                                          vertical:
-                                                                              8),
-                                                                      child:
-                                                                          Divider(
-                                                                        thickness:
-                                                                            1,
-                                                                        color: AppTheme
-                                                                            .primaryColor,
-                                                                      ),
-                                                                    ),
-                                                                    Row(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .spaceBetween,
-                                                                      children: [
-                                                                        dialogMenuItem(
-                                                                            title:
-                                                                                'Buy',
-                                                                            icon:
-                                                                                Icons.credit_card_rounded,
-                                                                            onTapped: () {
-                                                                              _transactionCubit.emit(TransactionCubitInitial());
-                                                                              showBuyAssetBottomSheet(context, token);
-                                                                            }),
-                                                                        dialogMenuItem(
-                                                                            title:
-                                                                                'Send',
-                                                                            icon:
-                                                                                Icons.send,
-                                                                            onTapped: () {
-                                                                              _transactionCubit.emit(TransactionCubitInitial());
-                                                                              showSendAssetBottomSheet(context, token);
-                                                                            }),
-                                                                        dialogMenuItem(
-                                                                            title:
-                                                                                'Sell',
-                                                                            icon:
-                                                                                Icons.sell_rounded,
-                                                                            onTapped: () {}),
-                                                                        dialogMenuItem(
-                                                                            title:
-                                                                                'More info',
-                                                                            icon:
-                                                                                Icons.info,
-                                                                            onTapped: () {}),
-                                                                      ],
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      );
+                                                      showTokenOperationsDialog(
+                                                          context, token);
                                                     },
                                                     icon: const Icon(
                                                       Icons.more_vert_rounded,
@@ -562,8 +439,11 @@ class _WalletPageState extends State<WalletPage>
                                                     color: Colors.grey.shade400,
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: Colors
-                                                            .grey.shade200,
+                                                        color: themeProvider
+                                                                .isDarkMode
+                                                            ? AppTheme
+                                                                .darkBackgroundColor
+                                                            : Colors.white30,
                                                         spreadRadius: 2,
                                                         blurRadius: 5,
                                                         offset: Offset(0,
@@ -691,7 +571,7 @@ class _WalletPageState extends State<WalletPage>
                           },
                           itemCount: tokens.length,
                         ),
-                        const Center(child: Text('Tab 2')),
+                        const Center(child: Text('Not found')),
                       ],
                       controller: controller,
                     ),
@@ -710,8 +590,7 @@ class _WalletPageState extends State<WalletPage>
                     ),
                     Text(
                       state.message,
-                      style:
-                          TextStyle(color: Colors.grey.shade800, fontSize: 12),
+                      style: TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
@@ -732,7 +611,6 @@ class _WalletPageState extends State<WalletPage>
                   ),
                   const Text(
                     'Loading Account Info',
-                    style: TextStyle(color: Colors.black),
                   ),
                 ],
               ),
@@ -740,6 +618,105 @@ class _WalletPageState extends State<WalletPage>
           },
         ),
       ),
+    );
+  }
+
+  Future<dynamic> showTokenOperationsDialog(BuildContext context, Token token) {
+    return showDialog(
+      context: context,
+      barrierColor: Colors.black38,
+      barrierDismissible: true,
+      builder: (context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 1,
+                )),
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                  left: 24, top: 16, right: 24, bottom: 8),
+              child: Wrap(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        token.symbol,
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.primaryColor),
+                      ),
+                      RawMaterialButton(
+                        onPressed: () {
+                          _transactionCubit.initTrust();
+                          showTrustBottomSheet(context, token);
+                        },
+                        elevation: 0,
+                        hoverElevation: 0,
+                        highlightElevation: 0,
+                        // fillColor:
+                        //     Colors.transparent,
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                            side: BorderSide(
+                                color: AppTheme.primaryColor, width: 2)),
+                        child: const Padding(
+                          padding:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          child: Text('Change Trust',
+                              style: TextStyle(
+                                fontWeight: FontWeight.normal,
+                              )),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Divider(
+                      thickness: 1,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      dialogMenuItem(
+                          title: 'Buy',
+                          icon: Icons.credit_card_rounded,
+                          onTapped: () {
+                            _transactionCubit.emit(TransactionCubitInitial());
+                            showBuyAssetBottomSheet(context, token);
+                          }),
+                      dialogMenuItem(
+                          title: 'Send',
+                          icon: Icons.send,
+                          onTapped: () {
+                            _transactionCubit.emit(TransactionCubitInitial());
+                            showSendAssetBottomSheet(context, token);
+                          }),
+                      dialogMenuItem(
+                          title: 'Sell',
+                          icon: Icons.sell_rounded,
+                          onTapped: () {}),
+                      dialogMenuItem(
+                          title: 'More info',
+                          icon: Icons.info,
+                          onTapped: () {}),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -765,7 +742,6 @@ class _WalletPageState extends State<WalletPage>
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Text(
               title,
-              style: TextStyle(color: Colors.black),
             ),
           )
         ],
@@ -786,13 +762,13 @@ class _WalletPageState extends State<WalletPage>
             Container(
               width: MediaQuery.of(context).size.width,
               padding: MediaQuery.of(context).viewInsets,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(15),
-                  topRight: Radius.circular(15),
-                ),
-              ),
+              decoration: BoxDecoration(
+                  color: themeProvider.isDarkMode ? Colors.black : Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                  ),
+                  border: Border.all(color: AppTheme.primaryColor)),
               child: Form(
                 key: _trustFormKey,
                 child: BlocConsumer<TransactionCubit, TransactionCubitState>(
@@ -1009,103 +985,7 @@ class _WalletPageState extends State<WalletPage>
       [
         GestureDetector(
           onTap: () {
-            showModalBottomSheet(
-              backgroundColor: Colors.transparent,
-              context: context,
-              builder: (context) {
-                var account1length = widget.accountId.length;
-                return Wrap(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(15),
-                          topRight: Radius.circular(15),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            onTap: () {
-                              activeAccountId = widget.accountId;
-                              setState(() {
-                                _infoCubit.getBasicAccountInfo(activeAccountId);
-                              });
-                              Navigator.of(context).pop();
-                            },
-                            title: Text(
-                              'Account 1: ${widget.accountId.toString().substring(0, 8)}...${widget.accountId.toString().substring(account1length - 8, account1length)}',
-                            ),
-                            leading: Container(
-                              width: 50,
-                              height: 50,
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: activeAccountId == widget.accountId
-                                    ? AppTheme.primaryColor
-                                    : Colors.grey.shade400,
-                              ),
-                              child: CircleAvatar(
-                                foregroundColor: Colors.white,
-                                radius: 24,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(50),
-                                  child: Image.network(
-                                    images.values.toList()[0],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          ListTile(
-                            onTap: () {
-                              setState(() {
-                                activeAccountId = accountId2;
-                                if (funds[accountId2]) {
-                                  _infoCubit.getBasicAccountInfo(accountId2);
-                                } else {
-                                  _infoCubit.fundAccount(accountId2);
-                                }
-                              });
-                              Navigator.of(context).pop();
-                            },
-                            title: Text(
-                              'Account 2: ${accountId2.toString().substring(0, 8)}...${accountId2.toString().substring(accountId2.length - 8, accountId2.length)}',
-                            ),
-                            leading: Container(
-                              width: 50,
-                              height: 50,
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: activeAccountId == accountId2
-                                    ? AppTheme.primaryColor
-                                    : Colors.grey.shade400,
-                              ),
-                              child: CircleAvatar(
-                                foregroundColor: Colors.white,
-                                radius: 24,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(50),
-                                  child: Image.network(
-                                    images.values.toList()[1],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
-                );
-              },
-            );
+            accountSwitchBottomSheet(context);
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1227,6 +1107,106 @@ class _WalletPageState extends State<WalletPage>
     );
   }
 
+  Future<dynamic> accountSwitchBottomSheet(BuildContext context) {
+    return showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        var account1length = widget.accountId.length;
+        return Wrap(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                  color: themeProvider.isDarkMode ? Colors.black : Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                  ),
+                  border: Border.all(color: AppTheme.primaryColor)),
+              child: Column(
+                children: [
+                  ListTile(
+                    onTap: () {
+                      activeAccountId = widget.accountId;
+                      setState(() {
+                        _infoCubit.getBasicAccountInfo(activeAccountId);
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    title: Text(
+                      'Account 1: ${widget.accountId.toString().substring(0, 8)}...${widget.accountId.toString().substring(account1length - 8, account1length)}',
+                    ),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: activeAccountId == widget.accountId
+                            ? AppTheme.primaryColor
+                            : Colors.grey.shade400,
+                      ),
+                      child: CircleAvatar(
+                        foregroundColor: Colors.white,
+                        radius: 24,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.network(
+                            images.values.toList()[0],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    onTap: () {
+                      setState(() {
+                        activeAccountId = accountId2;
+                        if (funds[accountId2]) {
+                          _infoCubit.getBasicAccountInfo(accountId2);
+                        } else {
+                          _infoCubit.fundAccount(accountId2);
+                        }
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    title: Text(
+                      'Account 2: ${accountId2.toString().substring(0, 8)}...${accountId2.toString().substring(accountId2.length - 8, accountId2.length)}',
+                    ),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: activeAccountId == accountId2
+                            ? AppTheme.primaryColor
+                            : Colors.grey.shade400,
+                      ),
+                      child: CircleAvatar(
+                        foregroundColor: Colors.white,
+                        radius: 24,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.network(
+                            images.values.toList()[1],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
   Future<dynamic> showBuyAssetBottomSheet(BuildContext context, Token token) {
     final _buyAssetFormKey = GlobalKey<FormState>();
 
@@ -1239,12 +1219,13 @@ class _WalletPageState extends State<WalletPage>
             Container(
               width: MediaQuery.of(context).size.width,
               padding: MediaQuery.of(context).viewInsets,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: themeProvider.isDarkMode ? Colors.black : Colors.white,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(15),
                   topRight: Radius.circular(15),
                 ),
+                border: Border.all(color: AppTheme.primaryColor),
               ),
               child: Form(
                 key: _buyAssetFormKey,
@@ -1285,9 +1266,13 @@ class _WalletPageState extends State<WalletPage>
                             }
                           },
                           autofocus: true,
-                          decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            focusColor: Colors.white,
+                          decoration: InputDecoration(
+                            fillColor: themeProvider.isDarkMode
+                                ? Colors.black
+                                : Colors.white,
+                            focusColor: themeProvider.isDarkMode
+                                ? Colors.black
+                                : Colors.white,
                           ),
                           onChanged: (value) {
                             buyAssetAmount = double.parse(value);
@@ -1425,9 +1410,10 @@ class _WalletPageState extends State<WalletPage>
             Container(
               width: MediaQuery.of(context).size.width,
               padding: MediaQuery.of(context).viewInsets,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: themeProvider.isDarkMode ? Colors.black : Colors.white,
+                border: Border.all(color: AppTheme.primaryColor),
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(15),
                   topRight: Radius.circular(15),
                 ),
@@ -1472,9 +1458,9 @@ class _WalletPageState extends State<WalletPage>
                           },
                           autofocus: true,
                           decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            focusColor: Colors.white,
-                          ),
+                              // fillColor: Colors.white,
+                              // focusColor: Colors.white,
+                              ),
                           onChanged: (value) {
                             buyAssetAmount = double.parse(value);
                           },
@@ -1649,8 +1635,9 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
     return BlocProvider(
       create: (context) => _transactionCubit,
       child: Container(
-        color: Colors.white,
-        alignment: Alignment.center,
+        color: themeProvider.isDarkMode
+            ? AppTheme.darkBackgroundColor
+            : Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1663,6 +1650,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: AppTheme.primaryColor,
                   ),
                   child: IconButton(
+                    splashRadius: 8,
                     icon: const Icon(Icons.credit_card_rounded),
                     onPressed: () {
                       if (trustedTokens == 0) {
@@ -1697,6 +1685,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: AppTheme.primaryColor,
                   ),
                   child: IconButton(
+                    splashRadius: 8,
                     icon: const Icon(Icons.download),
                     onPressed: () {},
                     color: Colors.white,
@@ -1716,6 +1705,8 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: AppTheme.primaryColor,
                   ),
                   child: IconButton(
+                    splashRadius: 8,
+
                     // iconSize: 16,
                     icon: const Icon(Icons.send),
                     onPressed: () {
@@ -1759,6 +1750,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                     color: AppTheme.primaryColor,
                   ),
                   child: IconButton(
+                    splashRadius: 8,
                     icon: const Icon(Icons.swap_horiz),
                     onPressed: () {},
                     color: Colors.white,
@@ -1787,12 +1779,13 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
           Container(
             width: MediaQuery.of(context).size.width,
             padding: MediaQuery.of(context).viewInsets,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: themeProvider.isDarkMode ? Colors.black : Colors.white,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(15),
                 topRight: Radius.circular(15),
               ),
+              border: Border.all(color: AppTheme.primaryColor),
             ),
             child: BlocBuilder<TransactionCubit, TransactionCubitState>(
               bloc: _transactionCubit,
@@ -1809,7 +1802,6 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                           'Confirm send info',
                           style: TextStyle(
                             fontSize: 18,
-                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1998,12 +1990,13 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
             Container(
               width: MediaQuery.of(context).size.width,
               padding: MediaQuery.of(context).viewInsets,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: themeProvider.isDarkMode ? Colors.black : Colors.white,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(15),
                   topRight: Radius.circular(15),
                 ),
+                border: Border.all(color: AppTheme.primaryColor),
               ),
               child: Form(
                 key: _buyAssetFormKey,

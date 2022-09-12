@@ -4,6 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../../enum.dart';
@@ -20,7 +21,6 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     try {
       emit(TransactionPaymentSending());
     
-      final pref = await SharedPreferences.getInstance();
       String encodedKeys = pref.getString('keys')!;
       Map<String, dynamic> keys = json.decode(encodedKeys);
       var secretSeed = keys[senderId];

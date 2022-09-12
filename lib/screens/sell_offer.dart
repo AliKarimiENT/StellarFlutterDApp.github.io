@@ -4,6 +4,7 @@ import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/enum.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_dapp/models/token.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
 import 'package:stellar_flutter_dapp/widgets/custom_appbar.dart';
@@ -71,7 +72,9 @@ class _SellOfferPageState extends State<SellOfferPage> {
         return true;
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: themeProvider.isDarkMode
+            ? AppTheme.darkBackgroundColor
+            : Colors.white,
         appBar: CustomAppBar(context, true, offerProcessDone),
         body: BlocProvider(
           create: (context) => _cubit,
@@ -101,7 +104,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16,
-                                    color: Colors.black.withOpacity(0.80),
+                                    color: getColor(),
                                   ),
                                 ),
                               ),
@@ -381,7 +384,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
       style: TextStyle(
         fontWeight: FontWeight.w300,
         fontSize: 14,
-        color: Colors.black.withOpacity(0.80),
+        color: getColor(),
       ),
     );
   }
@@ -484,9 +487,15 @@ class _SellOfferPageState extends State<SellOfferPage> {
       style: TextStyle(
         fontWeight: FontWeight.w300,
         fontSize: 14,
-        color: Colors.black.withOpacity(0.80),
+        color: getColor(),
       ),
     );
+  }
+
+  Color getColor() {
+    return themeProvider.isDarkMode
+        ? Colors.white.withOpacity(0.80)
+        : Colors.black.withOpacity(0.80);
   }
 
   void setToken({required String name, required AssetOfferType type}) {
