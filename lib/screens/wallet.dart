@@ -157,7 +157,7 @@ class _WalletPageState extends State<WalletPage>
               width: 24,
               height: 24,
               child: SvgPicture.asset(
-                'assets/stellarLogo.svg',
+                'assets/svgs/stellarLogo.svg',
                 color: themeProvider.isDarkMode ? Colors.white : Colors.black,
               ),
             ),

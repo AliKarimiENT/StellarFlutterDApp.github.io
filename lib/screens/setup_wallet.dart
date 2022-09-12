@@ -23,9 +23,9 @@ class SetupWalletPage extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Container(
-              margin: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+              margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
               child: SvgPicture.asset(
-                'assets/setup.svg',
+                'assets/svgs/setup.svg',
               ),
             ),
           ),

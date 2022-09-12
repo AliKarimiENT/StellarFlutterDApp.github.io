@@ -45,7 +45,7 @@ class _OnboardingState extends State<Onboarding> {
                     height: MediaQuery.of(context).size.height / 2,
                     margin: EdgeInsets.only(left: 16, right: 16, bottom: 16),
                     child: SvgPicture.asset(
-                      'assets/welcome.svg',
+                      'assets/svgs/welcome.svg',
                     ),
                   ),
                   const Text(

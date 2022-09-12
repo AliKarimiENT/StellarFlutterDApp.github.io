@@ -19,7 +19,7 @@ AppBar CustomAppBar(BuildContext context, bool hasLeading, bool? returnValue) {
             width: 24,
             height: 24,
             child: SvgPicture.asset(
-              'assets/stellarLogo.svg',
+              'assets/svgs/stellarLogo.svg',
               color: themeProvider.isDarkMode ? Colors.white : Colors.black,
             ),
           ),
