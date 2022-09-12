@@ -180,7 +180,10 @@ class _SellOfferPageState extends State<SellOfferPage> {
           margin: EdgeInsets.only(bottom: 16),
           child: RawMaterialButton(
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8))),
+              borderRadius: BorderRadius.all(
+                Radius.circular(8),
+              ),
+            ),
             fillColor: AppTheme.primaryColor,
             onPressed: () {
               if (_formKey.currentState!.validate()) {
@@ -200,7 +203,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
               }
             },
             child: Padding(
-                padding: EdgeInsets.all(0),
+                padding: const EdgeInsets.all(0),
                 child: BlocConsumer<TransactionCubit, TransactionCubitState>(
                     bloc: _cubit,
                     listener: (context, state) {

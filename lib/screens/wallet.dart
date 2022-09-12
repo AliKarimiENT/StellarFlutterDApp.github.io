@@ -22,11 +22,11 @@ late List<Account> accounts = [];
 late InfoCubit _infoCubit;
 late TransactionCubit _transactionCubit;
 late List<Token> tokens;
-
 late TabController controller;
 late int trustedTokens = 0;
 late Map<String, dynamic> keys;
 String? xlmAmount;
+late Map<String, dynamic> images;
 
 class WalletPage extends StatefulWidget {
   const WalletPage(this.accountId, {Key? key}) : super(key: key);
@@ -40,7 +40,6 @@ class _WalletPageState extends State<WalletPage>
   late Map<String, dynamic>
       funds; // a mapping for accountId and true/false which shows that an account is funded or not
   late String accountId2;
-  late Map<String, dynamic> images;
 
   double buyAssetAmount = 0;
 
@@ -129,7 +128,6 @@ class _WalletPageState extends State<WalletPage>
   }
 
   Future<void> loadAccountInfo() async {
-
     var funded = funds[activeAccountId];
     if (funded == false) {
       _infoCubit.fundAccount(widget.accountId);
@@ -184,7 +182,7 @@ class _WalletPageState extends State<WalletPage>
       ),
       body: BlocProvider(
         create: (context) => _infoCubit,
-        child: BlocConsumer<InfoCubit, BasicInfoState>(
+        child: BlocConsumer<InfoCubit, InfoState>(
           bloc: _infoCubit,
           listener: (context, state) {
             if (state is FundAccountDone) {
@@ -193,6 +191,15 @@ class _WalletPageState extends State<WalletPage>
                 funds[activeAccountId] = true;
               }
             }
+            // else if (state is AccountInfoLoaded) {
+            //   var keysList = keys.keys.toList();
+            //   var index = keysList.indexOf(activeAccountId);
+            //   _infoCubit.setUserProfileImage(
+            //     images.values.toList()[index],
+            //     activeAccountId,
+            //     keys[activeAccountId],
+            //   );
+            // }
           },
           builder: (context, state) {
             if (state is FundAccountLoading) {
@@ -234,10 +241,6 @@ class _WalletPageState extends State<WalletPage>
                 ),
               );
             } else if (state is FundAccountDone) {
-              _infoCubit.setUserProfileImage(
-                  images[keys.keys.toList().indexOf(activeAccountId)],
-                  activeAccountId,
-                  keys[activeAccountId]);
               if (!state.result) {
                 return Center(
                   child: Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
+import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_dapp/screens/import_wallet.dart';
 import 'package:stellar_flutter_dapp/screens/secret_recovery.dart';
 
@@ -13,8 +14,9 @@ class SetupWalletPage extends StatelessWidget {
   String accountId;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return Scaffold( backgroundColor: themeProvider.isDarkMode
+          ? AppTheme.darkBackgroundColor
+          : Colors.white,
       appBar: CustomAppBar(context, false, null),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,

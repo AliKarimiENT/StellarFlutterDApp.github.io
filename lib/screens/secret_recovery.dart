@@ -6,6 +6,8 @@ import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/screens/home.dart';
 import 'package:stellar_flutter_dapp/widgets/custom_appbar.dart';
 
+import '../main.dart';
+
 class SecretRecoveryPage extends StatefulWidget {
   SecretRecoveryPage(this.mnemonicKeys, this.accountId, {Key? key})
       : super(key: key);
@@ -20,7 +22,9 @@ class _SecretRecoveryPageState extends State<SecretRecoveryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(context, false, null),
-      backgroundColor: Colors.white,
+     backgroundColor: themeProvider.isDarkMode
+          ? AppTheme.darkBackgroundColor
+          : Colors.white,
       body: SafeArea(
         child: ConstrainedBox(
           constraints:
@@ -75,7 +79,6 @@ class _SecretRecoveryPageState extends State<SecretRecoveryPage> {
                         child: Text(
                           'Secret Recovery Phrase',
                           style: TextStyle(
-                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                               fontSize: 20),
                         ),
