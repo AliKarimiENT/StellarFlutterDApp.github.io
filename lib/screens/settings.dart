@@ -12,7 +12,7 @@ import 'package:stellar_flutter_dapp/screens/edit_profile.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
 
 import '../widgets/custom_appbar.dart';
-import 'package:stellar_flutter_sdk/src/responses/account_response.dart';
+import 'package:stellar_flutter_sdk/src/responses/account_response.dart' as stl;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -23,9 +23,9 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late InfoCubit _infoCubit;
-  late AccountResponse account;
+  late stl.AccountResponse account;
   late int index;
-  AccountResponseData? data;
+  stl.AccountResponseData? data;
   @override
   void initState() {
     super.initState();
@@ -100,7 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                               errorWidget: (context, url, error) =>
-                                  Icon(Icons.error),
+                                  const Icon(Icons.error),
                             ),
                             // child: Image.network(
                             //   images.values.toList()[index],
@@ -217,7 +217,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Container(
                       width: 24,
                       height: 24,
-                      margin: EdgeInsets.only(right: 8),
+                      margin: const EdgeInsets.only(right: 8),
                       child: SvgPicture.asset(
                         'assets/svgs/moon.svg',
                         color: themeProvider.isDarkMode
@@ -251,7 +251,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Container userAccountIdView(AccountResponse account) {
+  Container userAccountIdView(stl.AccountResponse account) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(

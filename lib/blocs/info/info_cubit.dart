@@ -1,13 +1,12 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
+
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/main.dart';
-import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 part 'info_state.dart';
 
@@ -17,9 +16,6 @@ class InfoCubit extends Cubit<InfoState> {
   Future<void> fundAccount(String accountId) async {
     try {
       emit(FundAccountLoading());
-      Wallet x = await Wallet.from(
-          'animal regret quality grit coffee adult utility pair snack prepare buyer decorate');
-      KeyPair keyPair0 = await x.getKeyPair(index: 0);
 
       bool funded = await FriendBot.fundTestAccount(accountId);
 
@@ -142,28 +138,6 @@ class InfoCubit extends Cubit<InfoState> {
           }
         }
       }
-
-      // if (address != null) {
-      //   await sendManageDataTransaction(
-      //     key: 'stellarAddress',
-      //     value: address,
-      //     account: account,
-      //     keyPair: keyPair,
-      //   );
-      //   FederationResponse response =
-      //       await Federation.resolveStellarAddress(address);
-      //   print(response.stellarAddress);
-      //   // bob*soneso.com
-
-      //   print(response.accountId);
-      //   // GBVPKXWMAB3FIUJB6T7LF66DABKKA2ZHRHDOQZ25GBAEFZVHTBPJNOJI
-
-      //   print(response.memoType);
-      //   // text
-
-      //   print(response.memo);
-      //   // hello memo text
-      // }
 
       if (emailChanged) {
         if (email != null) {

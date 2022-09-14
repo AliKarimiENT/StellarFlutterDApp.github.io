@@ -98,14 +98,14 @@ class _SecretRecoveryPageState extends State<SecretRecoveryPage> {
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.symmetric(horizontal: 24),
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         border:
                             Border.all(color: Colors.grey.shade300, width: 2),
                       ),
                       child: GridView.builder(
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
@@ -148,12 +148,12 @@ class _SecretRecoveryPageState extends State<SecretRecoveryPage> {
                           duration: const Duration(milliseconds: 2000),
                         ));
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      child: const Padding(
+                        padding: EdgeInsets.all(16.0),
                         child: Text('Copy'),
                       ),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 75,
                     )
                   ],

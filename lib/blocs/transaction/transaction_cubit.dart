@@ -2,7 +2,6 @@ import 'dart:convert';
 import "dart:math";
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
 import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
@@ -54,11 +53,6 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
               type: 'XLM'),
         );
       }
-
-      var transactions = sdk.transactions.forAccount(senderId).execute();
-      var operations = sdk.operations.forAccount(senderId).execute();
-      stl.Page<stl.OperationResponse> payments =
-          await sdk.payments.forAccount(senderId).execute();
     } catch (e) {
       TransactionPaymentFailed(e.toString());
     }
@@ -361,7 +355,8 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       emit(LoadingTransactionsFailed(message: e.toString()));
     }
   }
-Future<void> getOperations({required String accountId}) async {
+
+  Future<void> getOperations({required String accountId}) async {
     try {
       emit(LoadingOperations());
       stl.Page<stl.OperationResponse> transactions = await sdk.operations
@@ -373,6 +368,5 @@ Future<void> getOperations({required String accountId}) async {
     } catch (e) {
       emit(LoadingOperationsFailed(message: e.toString()));
     }
-  }  
-
+  }
 }

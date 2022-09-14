@@ -203,7 +203,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 child: Container(
                                   width: double.maxFinite,
                                   height: 45,
-                                  margin: EdgeInsets.only(bottom: 16),
+                                  margin: const EdgeInsets.only(bottom: 16),
                                   child: RawMaterialButton(
                                     fillColor: AppTheme.primaryColor,
                                     shape: const RoundedRectangleBorder(

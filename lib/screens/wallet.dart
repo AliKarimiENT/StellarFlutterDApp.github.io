@@ -152,7 +152,7 @@ class _WalletPageState extends State<WalletPage>
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
+            SizedBox(
               width: 24,
               height: 24,
               child: SvgPicture.asset(
@@ -450,8 +450,10 @@ class _WalletPageState extends State<WalletPage>
                                                             : Colors.white30,
                                                         spreadRadius: 2,
                                                         blurRadius: 5,
-                                                        offset: Offset(0,
-                                                            0), // changes position of shadow
+                                                        offset: const Offset(
+                                                          0,
+                                                          0,
+                                                        ), // changes position of shadow
                                                       ),
                                                     ],
                                                   ),
@@ -594,7 +596,7 @@ class _WalletPageState extends State<WalletPage>
                     ),
                     Text(
                       state.message,
-                      style: TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
@@ -743,7 +745,7 @@ class _WalletPageState extends State<WalletPage>
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
               title,
             ),
@@ -798,7 +800,7 @@ class _WalletPageState extends State<WalletPage>
                   builder: (context, state) => Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: 16),
+                        padding: const EdgeInsets.only(top: 16),
                         child: Text(
                             'Enter amount of ${token.symbol} token want to trust'),
                       ),
@@ -869,7 +871,7 @@ class _WalletPageState extends State<WalletPage>
                                   BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: BlocBuilder<TransactionCubit,
                                   TransactionCubitState>(
                                 bloc: _transactionCubit,
@@ -891,7 +893,7 @@ class _WalletPageState extends State<WalletPage>
                                       children: [
                                         Text(
                                           buttonText,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 16,
                                               color: Colors.white),
@@ -966,7 +968,7 @@ class _WalletPageState extends State<WalletPage>
                       if (state is TrustingTokenFailed)
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text('${state.message.toString()}',
+                          child: Text(state.message.toString(),
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
@@ -1035,7 +1037,7 @@ class _WalletPageState extends State<WalletPage>
                     CircularProgressIndicator(
                   value: progress.progress,
                 ),
-                errorWidget: (context, url, error) => Icon(Icons.error),
+                errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
             ),
           ),
@@ -1165,8 +1167,7 @@ class _WalletPageState extends State<WalletPage>
                           child: CachedNetworkImage(
                               imageUrl: images.values.toList()[0],
                               progressIndicatorBuilder:
-                                  (context, url, progress) =>
-                                      SizedBox(
+                                  (context, url, progress) => SizedBox(
                                         width: 24,
                                         height: 24,
                                         child: CircularProgressIndicator(
@@ -1213,14 +1214,15 @@ class _WalletPageState extends State<WalletPage>
                           child: CachedNetworkImage(
                             imageUrl: images.values.toList()[1],
                             progressIndicatorBuilder:
-                                (context, url, progress) =>
-                                    SizedBox(width: 24,height: 24,
-                                      child: CircularProgressIndicator(
-                              value: progress.progress,
+                                (context, url, progress) => SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                value: progress.progress,
+                              ),
                             ),
-                                    ),
                             errorWidget: (context, url, error) =>
-                                Icon(Icons.error),
+                                const Icon(Icons.error),
                           ),
                         ),
                       ),
@@ -1267,7 +1269,7 @@ class _WalletPageState extends State<WalletPage>
                   builder: (context, state) => Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: 16),
+                        padding: const EdgeInsets.only(top: 16),
                         child: Text(
                             'Enter amount of ${token.symbol} token want to buy'),
                       ),
@@ -1332,7 +1334,7 @@ class _WalletPageState extends State<WalletPage>
                                   BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: BlocBuilder<TransactionCubit,
                                   TransactionCubitState>(
                                 bloc: _transactionCubit,
@@ -1458,7 +1460,7 @@ class _WalletPageState extends State<WalletPage>
                   builder: (context, state) => Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(top: 16),
+                        padding: const EdgeInsets.only(top: 16),
                         child: Text(
                             'Enter amount of ${token.symbol} token want to send'),
                       ),
@@ -1521,7 +1523,7 @@ class _WalletPageState extends State<WalletPage>
                                   BorderRadius.all(Radius.circular(8)),
                             ),
                             child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               child: BlocBuilder<TransactionCubit,
                                   TransactionCubitState>(
                                 bloc: _transactionCubit,
@@ -2117,7 +2119,8 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                                       BorderRadius.all(Radius.circular(8)),
                                 ),
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
                                   child: BlocConsumer<TransactionCubit,
                                       TransactionCubitState>(
                                     bloc: _transactionCubit,
@@ -2237,7 +2240,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: const Divider(),
+          child: Divider(),
         )
       ],
     );

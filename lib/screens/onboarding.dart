@@ -43,7 +43,7 @@ class _OnboardingState extends State<Onboarding> {
                 children: [
                   Container(
                     height: MediaQuery.of(context).size.height / 2,
-                    margin: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                    margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
                     child: SvgPicture.asset(
                       'assets/svgs/welcome.svg',
                     ),
@@ -70,7 +70,7 @@ class _OnboardingState extends State<Onboarding> {
                     _keyGenerationCubit.generateKeys();
                   },
                   child: Padding(
-                    padding: EdgeInsets.all(12.0),
+                    padding: const EdgeInsets.all(12.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -97,7 +97,7 @@ class _OnboardingState extends State<Onboarding> {
                             builder: (context, state) {
                               if (state is KeyGenerationLoading) {
                                 return Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 8),
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
                                   child: const CircularProgressIndicator(),
                                   width: 16,
                                   height: 16,

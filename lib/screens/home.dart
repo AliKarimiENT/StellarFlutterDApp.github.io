@@ -1,10 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/screens/activity.dart';
 import 'package:stellar_flutter_dapp/screens/settings.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
-import 'package:stellar_flutter_dapp/widgets/custom_appbar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage(this.accountId, {Key? key}) : super(key: key);
@@ -21,8 +19,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     _widgetOptions = <Widget>[
       WalletPage(widget.accountId),
-      ActivityPage(),
-      SettingsPage()
+      const ActivityPage(),
+      const SettingsPage()
     ];
     super.initState();
   }
@@ -52,7 +50,7 @@ class _HomePageState extends State<HomePage> {
           currentIndex: _selectedIndex,
           onTap: (value) {
             setState(() {
-              this._selectedIndex = value;
+              _selectedIndex = value;
             });
           },
         ));

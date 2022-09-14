@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -10,12 +9,12 @@ class AppTheme {
   static const Color darkBackgroundColor = Color(0xff2A2A2A);
   static final darkTheme = ThemeData(
     scaffoldBackgroundColor: const Color(0xff2A2A2A),
-    colorScheme: ColorScheme.dark(),
+    colorScheme: const ColorScheme.dark(),
   );
 
   static final lightTheme = ThemeData(
     scaffoldBackgroundColor: Colors.white,
-    colorScheme: ColorScheme.light(),
+    colorScheme: const ColorScheme.light(),
   );
 }
 

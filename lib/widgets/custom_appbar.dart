@@ -10,7 +10,7 @@ AppBar CustomAppBar(BuildContext context, bool hasLeading, bool? returnValue) {
     backgroundColor:
         themeProvider.isDarkMode ? AppTheme.darkBackgroundColor : Colors.white,
     title: Padding(
-      padding: hasLeading ? EdgeInsets.only(right: 56) : EdgeInsets.zero,
+      padding: hasLeading ? const EdgeInsets.only(right: 56) : EdgeInsets.zero,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -38,7 +38,7 @@ AppBar CustomAppBar(BuildContext context, bool hasLeading, bool? returnValue) {
     elevation: 0,
     leading: hasLeading
         ? IconButton(
-            icon: Icon(Icons.chevron_left_rounded, size: 32),
+            icon: const Icon(Icons.chevron_left_rounded, size: 32),
             // color: Colors.black,
             splashRadius: 32,
             iconSize: 36,

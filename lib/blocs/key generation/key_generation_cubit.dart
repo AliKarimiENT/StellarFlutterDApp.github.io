@@ -1,13 +1,14 @@
+// ignore_for_file: unused_import
+
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:meta/meta.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
+
 import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_dapp/models/generated_key.dart';
-import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 part 'key_generation_state.dart';
 

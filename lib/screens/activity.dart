@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -199,7 +198,7 @@ class _ActivityPageState extends State<ActivityPage> {
         children: [
           Text(
             header,
-            style: TextStyle(color: AppTheme.red, fontSize: 16),
+            style: const TextStyle(color: AppTheme.red, fontSize: 16),
           ),
           Text(
             message,
@@ -541,7 +540,7 @@ class _ActivityPageState extends State<ActivityPage> {
                     Align(
                       alignment: Alignment.topCenter,
                       child: Padding(
-                        padding: EdgeInsets.only(top: 8, right: 16),
+                        padding: const EdgeInsets.only(top: 8, right: 16),
                         child: Icon(
                           successful
                               ? CupertinoIcons.check_mark_circled
@@ -652,7 +651,7 @@ class _ActivityPageState extends State<ActivityPage> {
     return SizedBox(
       height: 36,
       child: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         itemBuilder: (context, index) {

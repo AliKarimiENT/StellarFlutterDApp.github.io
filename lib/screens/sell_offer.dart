@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stellar_flutter_sdk/src/responses/offer_response.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
+
 import 'package:stellar_flutter_dapp/app_theme.dart';
 import 'package:stellar_flutter_dapp/blocs/transaction/transaction_cubit.dart';
 import 'package:stellar_flutter_dapp/consts.dart';
@@ -8,8 +11,6 @@ import 'package:stellar_flutter_dapp/main.dart';
 import 'package:stellar_flutter_dapp/models/token.dart';
 import 'package:stellar_flutter_dapp/screens/wallet.dart';
 import 'package:stellar_flutter_dapp/widgets/custom_appbar.dart';
-import 'package:stellar_flutter_sdk/src/responses/offer_response.dart';
-import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../enum.dart';
 
@@ -177,7 +178,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
         child: Container(
           width: double.maxFinite,
           height: 45,
-          margin: EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 16),
           child: RawMaterialButton(
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(
@@ -328,7 +329,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.primaryColor),
+              borderSide: const BorderSide(color: AppTheme.primaryColor),
               borderRadius: BorderRadius.circular(8)),
           labelText: 'Buying amount',
         ),
@@ -377,7 +378,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
           });
         },
         value: buyingAssetName,
-        hint: Text('Select Buying Asset'),
+        hint: const Text('Select Buying Asset'),
       ),
     );
   }
@@ -433,7 +434,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
         decoration: InputDecoration(
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppTheme.primaryColor),
+              borderSide: const BorderSide(color: AppTheme.primaryColor),
               borderRadius: BorderRadius.circular(8)),
           labelText: 'Selling amount',
         ),
@@ -480,7 +481,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
           });
         },
         value: sellingAssetName,
-        hint: Text('Select Selling Asset'),
+        hint: const Text('Select Selling Asset'),
       ),
     );
   }

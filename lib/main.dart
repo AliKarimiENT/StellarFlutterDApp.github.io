@@ -11,12 +11,12 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.getInstance().then((value) {
     pref = value;
-    runApp(MyApp());
+    runApp(const MyApp());
   });
 }
 
 class MyApp extends StatefulWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -46,7 +46,7 @@ class _MyAppState extends State<MyApp> {
           darkTheme: AppTheme.darkTheme,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          home: keyGenerated ? HomePage(accountId) : Onboarding(),
+          home: keyGenerated ? HomePage(accountId) : const Onboarding(),
         );
       },
     );

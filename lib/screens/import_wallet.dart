@@ -104,12 +104,12 @@ backgroundColor: themeProvider.isDarkMode
                             autofocus: false,
                             decoration: InputDecoration(
                               helperText: ' ',
-                              contentPadding: EdgeInsets.all(8),
+                              contentPadding: const EdgeInsets.all(8),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8)),
                               focusedBorder: OutlineInputBorder(
                                   borderSide:
-                                      BorderSide(color: AppTheme.primaryColor),
+                                      const BorderSide(color: AppTheme.primaryColor),
                                   borderRadius: BorderRadius.circular(8)),
                               labelText: 'key ${index + 1}',
                             ),
@@ -175,16 +175,16 @@ backgroundColor: themeProvider.isDarkMode
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Text(isChecking ? 'Checking' : 'Continue',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 16,
                                     color: Colors.white)),
                           ),
                           isChecking
                               ? Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 8),
+                                  margin: const EdgeInsets.symmetric(horizontal: 8),
                                   child: const CircularProgressIndicator(),
                                   width: 16,
                                   height: 16,
