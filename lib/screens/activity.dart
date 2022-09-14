@@ -144,7 +144,21 @@ class _ActivityPageState extends State<ActivityPage> {
                           } else {
                             return transactionsList();
                           }
-                        } else if (selectedIndex == 2) {}
+                        } else if (selectedIndex == 2) {
+                          if (state is LoadingOperations) {
+                            return loadingWidget(text: 'Loading operations');
+                          } else if (state is LoadingOperationsFailed) {
+                            return loadingFailureWidget(
+                                header:
+                                    'There was a problem for loading operations',
+                                message: state.message);
+                          }
+                          if (operations.isEmpty) {
+                            return emptyListWidget(category: 'operation');
+                          } else {
+                            return operationList();
+                          }
+                        }
                         return Container();
                         // if (offers.isEmpty) {
                         // } else {
@@ -423,13 +437,11 @@ class _ActivityPageState extends State<ActivityPage> {
                     alignment: Alignment.topCenter,
                     child: Padding(
                       padding: const EdgeInsets.only(top: 8, right: 16),
-                      child: Align(
-                        child: Icon(
-                          successful
-                              ? CupertinoIcons.check_mark_circled
-                              : CupertinoIcons.multiply_circle,
-                          color: successful ? AppTheme.green : AppTheme.red,
-                        ),
+                      child: Icon(
+                        successful
+                            ? CupertinoIcons.check_mark_circled
+                            : CupertinoIcons.multiply_circle,
+                        color: successful ? AppTheme.green : AppTheme.red,
                       ),
                     ),
                   ),
@@ -499,6 +511,110 @@ class _ActivityPageState extends State<ActivityPage> {
                   ),
                 ],
               ),
+            ),
+            const Divider(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget operationList() {
+    return ListView.builder(
+      itemCount: operations.length,
+      itemBuilder: (context, index) {
+        var operation = operations[index];
+        bool successful = operation.transactionSuccessful!;
+        DateTime _localTime = getLocalDateTime(operation.createdAt!);
+        final localDateTime = _localTime.toString().substring(
+              0,
+              _localTime.toString().indexOf('.'),
+            );
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 8, right: 16),
+                        child: Icon(
+                          successful
+                              ? CupertinoIcons.check_mark_circled
+                              : CupertinoIcons.multiply_circle,
+                          color: successful ? AppTheme.green : AppTheme.red,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RowInfoItem(
+                            title: 'Transaction successful',
+                            value: operation.transactionSuccessful.toString(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'ID',
+                            value: operation.id.toString(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Source',
+                            value: operation.sourceAccount.toString(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Transaction hash',
+                            value: operation.transactionHash.toString(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Transaction hash',
+                            value: operation.transactionHash.toString(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Type',
+                            value: operation.type.toString(),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                          RowInfoItem(
+                            title: 'Created at',
+                            value: localDateTime,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Divider(),
+                          ),
+                        ],
+                      ),
+                    )
+                  ]),
             ),
             const Divider(),
           ],
