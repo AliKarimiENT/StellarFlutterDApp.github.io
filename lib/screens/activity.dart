@@ -220,7 +220,6 @@ class _ActivityPageState extends State<ActivityPage> {
           width: 24,
           height: 24,
           child: const CircularProgressIndicator(
-            color: AppTheme.primaryColor,
           ),
         ),
         Text(

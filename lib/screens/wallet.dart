@@ -214,7 +214,6 @@ class _WalletPageState extends State<WalletPage>
                       width: 24,
                       height: 24,
                       child: const CircularProgressIndicator(
-                        color: AppTheme.primaryColor,
                       ),
                     ),
                     const Text(
@@ -273,13 +272,12 @@ class _WalletPageState extends State<WalletPage>
                   break;
                 }
               }
-
+              for (var token in tokens) {
+                token.trusted = false;
+                token.balance = 0;
+                token.limit = 0;
+              }
               if (!exist) {
-                for (var token in tokens) {
-                  token.trusted = false;
-                  token.balance = 0;
-                  token.limit = 0;
-                }
                 accounts.add(newAccount);
               }
 
@@ -612,7 +610,6 @@ class _WalletPageState extends State<WalletPage>
                     width: 24,
                     height: 24,
                     child: const CircularProgressIndicator(
-                      color: AppTheme.primaryColor,
                     ),
                   ),
                   const Text(
@@ -902,7 +899,8 @@ class _WalletPageState extends State<WalletPage>
                                           margin: const EdgeInsets.symmetric(
                                               horizontal: 8),
                                           child:
-                                              const CircularProgressIndicator(),
+                                              const CircularProgressIndicator(
+                                          ),
                                           width: 16,
                                           height: 16,
                                         )
@@ -1424,6 +1422,10 @@ class _WalletPageState extends State<WalletPage>
   Future<dynamic> showSendAssetBottomSheet(BuildContext context, Token token) {
     final _sendAssetFormKey = GlobalKey<FormState>();
     late String senderSecretSeed, trusterSecretSeed;
+    if (accounts.length == 1) {
+      _transactionCubit
+          .emit(TransactionPaymentFailed('Another account is not funded'));
+    }
     for (var account in accounts) {
       if (account.accountId == activeAccountId) {
         senderSecretSeed = keys[account.accountId];
@@ -1597,7 +1599,7 @@ class _WalletPageState extends State<WalletPage>
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text(
-                              'An Error Accord\n ${state.message.toString()}',
+                              'An Error Accord\n${state.message.toString()}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,

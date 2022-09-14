@@ -239,7 +239,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                                       .symmetric(horizontal: 8),
                                                   child:
                                                       const CircularProgressIndicator(
-                                                    color: Colors.white,
                                                   ),
                                                   width: 16,
                                                   height: 16,

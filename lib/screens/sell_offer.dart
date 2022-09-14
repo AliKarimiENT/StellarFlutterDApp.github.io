@@ -231,7 +231,6 @@ class _SellOfferPageState extends State<SellOfferPage> {
                             Container(
                               margin: const EdgeInsets.symmetric(horizontal: 8),
                               child: const CircularProgressIndicator(
-                                color: Colors.white,
                               ),
                               width: 16,
                               height: 16,

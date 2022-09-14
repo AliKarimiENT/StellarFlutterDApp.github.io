@@ -199,7 +199,6 @@ class _SettingsPageState extends State<SettingsPage> {
                           width: 24,
                           height: 24,
                           child: const CircularProgressIndicator(
-                            color: AppTheme.primaryColor,
                           ),
                         ),
                         const Text(
