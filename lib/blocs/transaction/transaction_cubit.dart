@@ -20,7 +20,7 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       required String amount}) async {
     try {
       emit(TransactionPaymentSending());
-    
+
       String encodedKeys = pref.getString('keys')!;
       Map<String, dynamic> keys = json.decode(encodedKeys);
       var secretSeed = keys[senderId];
@@ -247,6 +247,7 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
     required int amountSelling, // amount of asset want to sell
     required int amountBuying,
     required String? offerId,
+    required String? memo,
     required bool passiveOffer,
   }) async {
     try {
@@ -346,4 +347,32 @@ class TransactionCubit extends Cubit<TransactionCubitState> {
       emit(LoadingOffersFailed(message: e.toString()));
     }
   }
+
+  Future<void> getTransaction({required String accountId}) async {
+    try {
+      emit(LoadingTransactions());
+      stl.Page<stl.TransactionResponse> transactions = await sdk.transactions
+          .forAccount(accountId)
+          .order(stl.RequestBuilderOrder.DESC)
+          .includeFailed(true)
+          .execute();
+      emit(LoadedTransactions(records: transactions.records!.toList()));
+    } catch (e) {
+      emit(LoadingTransactionsFailed(message: e.toString()));
+    }
+  }
+Future<void> getOperations({required String accountId}) async {
+    try {
+      emit(LoadingOperations());
+      stl.Page<stl.OperationResponse> transactions = await sdk.operations
+          .forAccount(accountId)
+          .order(stl.RequestBuilderOrder.DESC)
+          .includeFailed(true)
+          .execute();
+      emit(LoadedOperations(records: transactions.records!.toList()));
+    } catch (e) {
+      emit(LoadingOperationsFailed(message: e.toString()));
+    }
+  }  
+
 }

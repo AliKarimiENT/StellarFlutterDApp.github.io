@@ -131,3 +131,49 @@ class LoadingOffersFailed extends TransactionCubitState {
   @override
   List<Object?> get props => [message];
 }
+
+class LoadingTransactions extends TransactionCubitState {
+  @override
+  List<Object?> get props => [];
+}
+
+class LoadedTransactions extends TransactionCubitState {
+  List<stl.TransactionResponse> records;
+  LoadedTransactions({
+    required this.records,
+  });
+  @override
+  List<Object?> get props => [records];
+}
+
+class LoadingTransactionsFailed extends TransactionCubitState {
+  String message;
+  LoadingTransactionsFailed({
+    required this.message,
+  });
+  @override
+  List<Object?> get props => [message];
+}
+
+class LoadingOperations extends TransactionCubitState {
+  @override
+  List<Object?> get props => [];
+}
+
+class LoadedOperations extends TransactionCubitState {
+  List<stl.OperationResponse> records;
+  LoadedOperations({
+    required this.records,
+  });
+  @override
+  List<Object?> get props => [records];
+}
+
+class LoadingOperationsFailed extends TransactionCubitState {
+  String message;
+  LoadingOperationsFailed({
+    required this.message,
+  });
+  @override
+  List<Object?> get props => [message];
+}

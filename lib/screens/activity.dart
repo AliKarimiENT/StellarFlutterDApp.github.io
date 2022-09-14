@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
@@ -13,6 +14,7 @@ import 'package:stellar_flutter_dapp/widgets/row_info.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stl;
 
 import '../app_theme.dart';
+import '../helper.dart';
 import '../models/fab_data.dart';
 import '../widgets/custom_appbar.dart';
 
@@ -29,7 +31,9 @@ class _ActivityPageState extends State<ActivityPage> {
   late List<String> categories = ['Offers', 'Transactions', 'Operations'];
   late int selectedIndex = 0;
   late List<stl.OfferResponse> offers = [];
-  late String deletedOfferId;
+  late List<stl.TransactionResponse> transactions = [];
+  late List<stl.OperationResponse> operations = [];
+  late String deletedOfferId = '';
   @override
   void initState() {
     super.initState();
@@ -83,82 +87,74 @@ class _ActivityPageState extends State<ActivityPage> {
                           setState(() {
                             offers = state.records;
                           });
-                        }
-                        if (state is OfferProcessDone) {
+                        } else if (state is OfferProcessDone) {
                           if (state.type == OfferOperationType.delete) {
                             _transactionCubit.getOffers(
                                 accountId: activeAccountId);
                             deleteBtnTapped = false;
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                "The offer with id : ($deletedOfferId) is deleted",
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.all(16),
+                              backgroundColor: AppTheme.primaryColor,
+                              duration: const Duration(milliseconds: 3500),
+                            ));
                           }
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(
-                                "The offer with id : ($deletedOfferId) is deleted"),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.all(16),
-                            backgroundColor: AppTheme.primaryColor,
-                            duration: const Duration(milliseconds: 3500),
-                          ));
+                        } else if (state is LoadedTransactions) {
+                          setState(() {
+                            transactions = state.records;
+                          });
+                        } else if (state is LoadedOperations) {
+                          setState(() {
+                            operations = state.records;
+                          });
                         }
                       },
                       builder: (context, state) {
-                        if (state is LoadingOffers) {
-                          return Center(
-                              child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.all(8),
-                                width: 24,
-                                height: 24,
-                                child: const CircularProgressIndicator(
-                                  color: AppTheme.primaryColor,
-                                ),
-                              ),
-                              const Text(
-                                'Loading Offers',
-                              ),
-                            ],
-                          ));
-                        } else if (state is LoadingOffersFailed) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'There was a problem for loading offers',
-                                  style: TextStyle(
-                                      color: Colors.red, fontSize: 16),
-                                ),
-                                Text(
-                                  state.message,
-                                  style: TextStyle(
-                                      color: Colors.grey.shade800,
-                                      fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        if (offers.isEmpty) {
-                          return Container(
-                            child: const Text(
-                              'No offer found',
-                            ),
-                            alignment: Alignment.center,
-                          );
-                        } else {
-                          if (selectedIndex == 0) {
-                            return offersList();
-                          } else if (selectedIndex == 1) {
-                            return Center(child: Text('Transactions'));
-                          } else {
-                            return Center(child: Text('Operations'));
+                        if (selectedIndex == 0) {
+                          if (state is LoadingOffers) {
+                            return loadingWidget(text: 'Loading Offers');
+                          } else if (state is LoadingOffersFailed) {
+                            return loadingFailureWidget(
+                                header:
+                                    'There was a problem for loading offers',
+                                message: state.message);
                           }
-                        }
+                          if (offers.isEmpty) {
+                            return emptyListWidget(category: 'offer');
+                          } else {
+                            return offersList();
+                          }
+                        } else if (selectedIndex == 1) {
+                          if (state is LoadingTransactions) {
+                            return loadingWidget(text: 'Loading transactions');
+                          } else if (state is LoadingOffersFailed) {
+                            return loadingFailureWidget(
+                                header:
+                                    'There was a problem for loading transaction',
+                                message: state.message);
+                          }
+                          if (transactions.isEmpty) {
+                            return emptyListWidget(category: 'transaction');
+                          } else {
+                            return transactionsList();
+                          }
+                        } else if (selectedIndex == 2) {}
+                        return Container();
+                        // if (offers.isEmpty) {
+                        // } else {
+                        //   if (selectedIndex == 0) {
+                        //   } else if (selectedIndex == 1) {
+                        //     return Center(child: Text('Transactions'));
+                        //   } else {
+                        //     return Center(child: Text('Operations'));
+                        //   }
+                        // }
                       },
                     ),
                   )
@@ -169,6 +165,56 @@ class _ActivityPageState extends State<ActivityPage> {
         ),
       ),
     );
+  }
+
+  Container emptyListWidget({required String category}) {
+    return Container(
+      child: Text(
+        'No $category found',
+      ),
+      alignment: Alignment.center,
+    );
+  }
+
+  Center loadingFailureWidget(
+      {required String header, required String message}) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            header,
+            style: TextStyle(color: AppTheme.red, fontSize: 16),
+          ),
+          Text(
+            message,
+            style: TextStyle(color: Colors.grey.shade800, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Center loadingWidget({required String text}) {
+    return Center(
+        child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          margin: const EdgeInsets.all(8),
+          width: 24,
+          height: 24,
+          child: const CircularProgressIndicator(
+            color: AppTheme.primaryColor,
+          ),
+        ),
+        Text(
+          text,
+        ),
+      ],
+    ));
   }
 
   bool deleteBtnTapped = false;
@@ -212,6 +258,12 @@ class _ActivityPageState extends State<ActivityPage> {
               }
             }
           }
+
+          DateTime _localTime = getLocalDateTime(offer.lastModifiedTime!);
+          final localDateTime = _localTime.toString().substring(
+                0,
+                _localTime.toString().indexOf('.'),
+              );
           return Stack(
             children: [
               Positioned(
@@ -253,6 +305,7 @@ class _ActivityPageState extends State<ActivityPage> {
                         amountSelling: 0,
                         amountBuying: 1,
                         passiveOffer: false,
+                        memo: "ALI KARIMI",
                       );
                     }
                   },
@@ -266,64 +319,73 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 16),
-                // height: 50,
-                // color: Colors.red,
                 child: Row(
                   children: [
                     offersAssetColumnImages(
                         sellingAssetImage, buyingAssetImage),
                     Expanded(
-                      child: Column(
-                        children: [
-                          RowInfoItem(
-                            title: 'Offer id',
-                            value: offer.id!,
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 36),
-                            child: Divider(),
-                          ),
-                          RowInfoItem(
-                            title: 'Seller',
-                            value: offer.seller!.accountId,
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 36),
-                            child: Divider(),
-                          ),
-                          RowInfoItem(
-                            title: 'Selling',
-                            value: sellingAssetName,
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 36),
-                            child: Divider(),
-                          ),
-                          RowInfoItem(
-                            title: 'Amount',
-                            value: offer.amount ?? '',
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 36),
-                            child: Divider(),
-                          ),
-                          RowInfoItem(
-                            title: 'Buying',
-                            value: buyingAssetName,
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 36),
-                            child: Divider(),
-                          ),
-                          RowInfoItem(
-                            title: 'Price',
-                            value: offer.price ?? '',
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 36),
-                            child: Divider(),
-                          )
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Column(
+                          children: [
+                            RowInfoItem(
+                              title: 'Offer id',
+                              value: offer.id!,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            ),
+                            RowInfoItem(
+                              title: 'Seller',
+                              value: offer.seller!.accountId,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            ),
+                            RowInfoItem(
+                              title: 'Selling',
+                              value: sellingAssetName,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            ),
+                            RowInfoItem(
+                              title: 'Amount',
+                              value: offer.amount ?? '',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            ),
+                            RowInfoItem(
+                              title: 'Buying',
+                              value: buyingAssetName,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            ),
+                            RowInfoItem(
+                              title: 'Price',
+                              value: offer.price ?? '',
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            ),
+                            RowInfoItem(
+                              title: 'Date & Time',
+                              value: localDateTime,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 36),
+                              child: Divider(),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -336,6 +398,115 @@ class _ActivityPageState extends State<ActivityPage> {
         itemCount: offers.length);
   }
 
+  Widget transactionsList() {
+    return ListView.builder(
+      scrollDirection: Axis.vertical,
+      physics: const ClampingScrollPhysics(),
+      itemCount: transactions.length,
+      itemBuilder: (context, index) {
+        var transaction = transactions[index];
+        bool successful = transaction.successful!;
+        DateTime _localTime = getLocalDateTime(transaction.createdAt!);
+        final localDateTime = _localTime.toString().substring(
+              0,
+              _localTime.toString().indexOf('.'),
+            );
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8, right: 16),
+                      child: Align(
+                        child: Icon(
+                          successful
+                              ? CupertinoIcons.check_mark_circled
+                              : CupertinoIcons.multiply_circle,
+                          color: successful ? AppTheme.green : AppTheme.red,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        RowInfoItem(
+                          title: 'Successful',
+                          value: transaction.successful.toString(),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                        RowInfoItem(
+                          title: 'Hash/ID',
+                          value: transaction.hash!,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                        RowInfoItem(
+                          title: 'Source',
+                          value: transaction.sourceAccount!,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                        RowInfoItem(
+                          title: 'Ledger',
+                          value: transaction.ledger.toString(),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                        RowInfoItem(
+                          title: 'Charged fee',
+                          value: transaction.feeCharged.toString(),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                        RowInfoItem(
+                          title: 'Operation count',
+                          value: transaction.operationCount.toString(),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                        RowInfoItem(
+                          title: 'Created at',
+                          value: localDateTime,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 36),
+                          child: Divider(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+          ],
+        );
+      },
+    );
+  }
+
   Padding offersAssetColumnImages(
       String? sellingAssetImage, String? buyingAssetImage) {
     return Padding(
@@ -345,7 +516,7 @@ class _ActivityPageState extends State<ActivityPage> {
           SvgPicture.network(
             sellingAssetImage!,
             color: Colors.grey,
-            height: 20,
+            height: 30,
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 4),
@@ -354,7 +525,7 @@ class _ActivityPageState extends State<ActivityPage> {
           SvgPicture.network(
             buyingAssetImage!,
             color: Colors.grey,
-            height: 20,
+            height: 30,
           ),
         ],
       ),
@@ -377,6 +548,10 @@ class _ActivityPageState extends State<ActivityPage> {
                 });
                 if (selectedIndex == 0) {
                   _transactionCubit.getOffers(accountId: activeAccountId);
+                } else if (selectedIndex == 1) {
+                  _transactionCubit.getTransaction(accountId: activeAccountId);
+                } else if (selectedIndex == 2) {
+                  _transactionCubit.getOperations(accountId: activeAccountId);
                 }
               }
             },

@@ -322,8 +322,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
-                                              content:  const Text(
-                                                  'Nothing has been changed',style: TextStyle(color: Colors.white )),
+                                              content: const Text(
+                                                  'Nothing has been changed',
+                                                  style: TextStyle(
+                                                      color: Colors.white)),
                                               shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(
@@ -356,7 +358,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13,
-                                      color: Colors.red),
+                                      color: AppTheme.red),
                                 ),
                               ),
                           ],

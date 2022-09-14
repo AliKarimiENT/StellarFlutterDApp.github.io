@@ -153,7 +153,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
                                   style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13,
-                                      color: Colors.red),
+                                      color: AppTheme.red),
                                 ),
                               ),
                           ],
@@ -199,6 +199,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
                   amountSelling: sellingAmount,
                   amountBuying: buyingAmount,
                   passiveOffer: isPassive,
+                  memo: "ALI KARIMI",
                 );
               }
             },

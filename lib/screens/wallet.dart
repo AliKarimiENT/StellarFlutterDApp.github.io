@@ -230,7 +230,7 @@ class _WalletPageState extends State<WalletPage>
                   children: [
                     const Text(
                       'Unfortunately there was a problem',
-                      style: TextStyle(color: Colors.red, fontSize: 16),
+                      style: TextStyle(color: AppTheme.red, fontSize: 16),
                     ),
                     Text(
                       state.message,
@@ -249,7 +249,7 @@ class _WalletPageState extends State<WalletPage>
                     children: [
                       const Text(
                         "We couldn't fund your account\n tap to retry",
-                        style: TextStyle(color: Colors.red, fontSize: 16),
+                        style: TextStyle(color: AppTheme.red, fontSize: 16),
                       ),
                       IconButton(
                           onPressed: () =>
@@ -589,7 +589,7 @@ class _WalletPageState extends State<WalletPage>
                   children: [
                     const Text(
                       'There was a problem for loading account info',
-                      style: TextStyle(color: Colors.red, fontSize: 16),
+                      style: TextStyle(color: AppTheme.red, fontSize: 16),
                     ),
                     Text(
                       state.message,
@@ -969,7 +969,7 @@ class _WalletPageState extends State<WalletPage>
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
-                                  color: Colors.red)),
+                                  color: AppTheme.red)),
                         )
                     ],
                   ),
@@ -1382,7 +1382,7 @@ class _WalletPageState extends State<WalletPage>
                             style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
-                                color: Colors.red))
+                                color: AppTheme.red))
                     ],
                   ),
                 ),
@@ -1574,7 +1574,7 @@ class _WalletPageState extends State<WalletPage>
                               style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 13,
-                                  color: Colors.red)),
+                                  color: AppTheme.red)),
                         )
                     ],
                   ),
@@ -1945,7 +1945,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                                       style: TextStyle(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 16,
-                                          color: Colors.red));
+                                          color: AppTheme.red));
                                 } else if (state is TransactionPaymentSent) {}
 
                                 return const Text(
@@ -2176,7 +2176,7 @@ class SectionHeaderDelegate extends SliverPersistentHeaderDelegate {
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
-                                    color: Colors.red))
+                                    color: AppTheme.red))
                         ],
                       );
                     },

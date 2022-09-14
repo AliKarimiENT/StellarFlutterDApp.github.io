@@ -116,7 +116,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             )
                           : Container(),
-                      userAccountIdView(account),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: userAccountIdView(account),
+                      ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: RawMaterialButton(
