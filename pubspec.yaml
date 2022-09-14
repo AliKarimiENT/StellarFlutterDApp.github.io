@@ -43,6 +43,7 @@ dependencies:
   http: 
   flutter_expandable_fab: 
   provider: 
+  cached_network_image: 
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,9 +89,22 @@ class _SettingsPageState extends State<SettingsPage> {
                           radius: 24,
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(50),
-                            child: Image.network(
-                              images.values.toList()[index],
+                            child: CachedNetworkImage(
+                              imageUrl: images.values.toList()[index],
+                              progressIndicatorBuilder:
+                                  (context, url, progress) => SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  value: progress.progress,
+                                ),
+                              ),
+                              errorWidget: (context, url, error) =>
+                                  Icon(Icons.error),
                             ),
+                            // child: Image.network(
+                            //   images.values.toList()[index],
+                            // ),
                           ),
                         ),
                       ),

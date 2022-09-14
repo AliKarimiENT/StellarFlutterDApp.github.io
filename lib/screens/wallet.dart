@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1028,8 +1029,13 @@ class _WalletPageState extends State<WalletPage>
             radius: 24,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
-              child: Image.network(
-                account.imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: account.imageUrl,
+                progressIndicatorBuilder: (context, url, progress) =>
+                    CircularProgressIndicator(
+                  value: progress.progress,
+                ),
+                errorWidget: (context, url, error) => Icon(Icons.error),
               ),
             ),
           ),
@@ -1156,9 +1162,19 @@ class _WalletPageState extends State<WalletPage>
                         radius: 24,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(50),
-                          child: Image.network(
-                            images.values.toList()[0],
-                          ),
+                          child: CachedNetworkImage(
+                              imageUrl: images.values.toList()[0],
+                              progressIndicatorBuilder:
+                                  (context, url, progress) =>
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          value: progress.progress,
+                                        ),
+                                      ),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error)),
                         ),
                       ),
                     ),
@@ -1194,8 +1210,17 @@ class _WalletPageState extends State<WalletPage>
                         radius: 24,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(50),
-                          child: Image.network(
-                            images.values.toList()[1],
+                          child: CachedNetworkImage(
+                            imageUrl: images.values.toList()[1],
+                            progressIndicatorBuilder:
+                                (context, url, progress) =>
+                                    SizedBox(width: 24,height: 24,
+                                      child: CircularProgressIndicator(
+                              value: progress.progress,
+                            ),
+                                    ),
+                            errorWidget: (context, url, error) =>
+                                Icon(Icons.error),
                           ),
                         ),
                       ),
