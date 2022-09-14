@@ -47,12 +47,29 @@ class _SellOfferPageState extends State<SellOfferPage> {
       }
     }
     _offer = widget.offer;
-    if (widget.offer != null) {
-      var sellingAsset = _offer!.selling as stl.AssetTypeCreditAlphaNum;
-      var buyingAsset = _offer!.buying as stl.AssetTypeCreditAlphaNum;
+    if (_offer != null) {
+      var sellingAsset;
+      var buyingAsset;
 
-      sellingAssetName = sellingAsset.mCode;
-      buyingAssetName = buyingAsset.mCode;
+      if (_offer!.selling!.type == 'native') {
+        sellingAsset = _offer!.selling as stl.AssetTypeNative;
+        sellingAssetName = 'XLM';
+      } else {
+        sellingAsset = _offer!.selling as stl.AssetTypeCreditAlphaNum;
+        sellingAssetName = sellingAsset.mCode;
+      }
+
+      if (_offer!.buying!.type == 'native') {
+        buyingAsset = _offer!.buying as stl.AssetTypeNative;
+        buyingAssetName = 'XLM';
+      } else {
+        buyingAsset = _offer!.buying as stl.AssetTypeCreditAlphaNum;
+        buyingAssetName = buyingAsset.mCode;
+      }
+
+      // sellingAsset = _offer!.selling as stl.AssetTypeCreditAlphaNum;
+      // buyingAsset = _offer!.buying as stl.AssetTypeCreditAlphaNum;
+
       sellingAmount = double.tryParse(_offer!.amount!)!.toInt();
       buyingAmount = (double.tryParse(_offer!.price!)! * sellingAmount).toInt();
 
@@ -230,8 +247,7 @@ class _SellOfferPageState extends State<SellOfferPage> {
                             ),
                             Container(
                               margin: const EdgeInsets.symmetric(horizontal: 8),
-                              child: const CircularProgressIndicator(
-                              ),
+                              child: const CircularProgressIndicator(),
                               width: 16,
                               height: 16,
                             )
